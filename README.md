@@ -1,5 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
-### Azure Verified Module for Azure Bastion
+# Azure Verified Module for Azure Bastion
 
 This module provides a generic way to create and manage a Azure Bastion resource.
 

@@ -56,7 +56,7 @@ resource "azurerm_public_ip" "example" {
 
 # This is the module call
 module "azure_bastion" {
-  source = "../../" 
+  source = "../../"
 
   // Pass in the required variables from the module
   enable_telemetry     = true
