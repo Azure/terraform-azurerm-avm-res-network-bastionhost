@@ -10,18 +10,24 @@ DESCRIPTION
 
 # This is required for most resource modules
 variable "resource_group_name" {
-  description = "The name of the resource group in which to create the Azure Bastion."
+  description = <<DESCRIPTION
+  "The name of the resource group in which to create the Azure Bastion."
+  DESCRIPTION
   type        = string
 }
 
 variable "virtual_network_name" {
-  description = "The name of the virtual network where Azure Bastion will be deployed."
+  description = <<DESCRIPTION
+  "The name of the virtual network where Azure Bastion will be deployed."
+  DESCRIPTION
   type        = string
 }
 
 
 variable "subnet_name" {
-  description = "The name of the subnet"
+  description = <<DESCRIPTION
+  "The name of the subnet"
+  DESCRIPTION
   type        = string
   default     = "AzureBastionSubnet"
 
@@ -33,7 +39,9 @@ variable "subnet_name" {
 
 
 variable "bastion_host" {
-  description = "Configuration for Azure Bastion Host"
+  description = <<DESCRIPTION
+  "Configuration for Azure Bastion Host"
+  DESCRIPTION
   type = object({
     name                = string
     resource_group_name = string
@@ -75,6 +83,7 @@ variable "bastion_host" {
     tunneling_enabled      = false // Only applicable for Standard SKU
     tags                   = {}
   }
+
 }
 
 ## AVM Required Interfaces
