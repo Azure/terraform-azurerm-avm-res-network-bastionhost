@@ -4,6 +4,7 @@ This module provides a generic way to create and manage a Azure Bastion resource
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
 
+```
 module "azure_bastion" {
   source = "./path_to_this_module"
 
@@ -31,3 +32,4 @@ module "azure_bastion" {
     tunneling_enabled      = true
   
   }
+  ```
