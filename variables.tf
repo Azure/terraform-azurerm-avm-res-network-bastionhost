@@ -40,7 +40,7 @@ variable "subnet_name" {
 
 variable "bastion_host" {
   description = <<DESCRIPTION
-  "Configuration for Azure Bastion Host"
+  "Configuration for Azure Bastion Host. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail"
   DESCRIPTION
   type = object({
     name                = string
@@ -58,12 +58,12 @@ variable "bastion_host" {
     scale_units            = number
     shareable_link_enabled = bool
     tunneling_enabled      = bool
-    tags                   = map(string)
   })
 
   validation {
     condition     = basename(var.bastion_host.ip_configuration.subnet_id) == "AzureBastionSubnet"
     error_message = "The subnet name must be AzureBastionSubnet."
+
   }
   default = {
     name                = "example-bastion"
@@ -83,6 +83,7 @@ variable "bastion_host" {
     tunneling_enabled      = false // Only applicable for Standard SKU
     tags                   = {}
   }
+
 
 }
 
@@ -181,6 +182,9 @@ variable "lock" {
 //Tags
 
 variable "tags" {
-  type    = map(any)
-  default = {}
+  type        = map(any)
+  default     = {}
+  description = <<DESCRIPTION
+  A mapping of tags to assign to the resource.
+  DESCRIPTION
 }

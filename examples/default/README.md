@@ -169,10 +169,6 @@ Description: n/a
 
 Description: n/a
 
-### <a name="output_bastion_host_name"></a> [bastion\_host\_name](#output\_bastion\_host\_name)
-
-Description: n/a
-
 ## Modules
 
 The following Modules are called:

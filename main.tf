@@ -4,7 +4,7 @@ resource "azurerm_bastion_host" "bastion" {
   resource_group_name = var.bastion_host.resource_group_name
   location            = var.bastion_host.location
   sku                 = var.bastion_host.sku
-  tags                = var.bastion_host.tags
+
 
   ip_configuration {
     name                 = var.bastion_host.ip_configuration.name
