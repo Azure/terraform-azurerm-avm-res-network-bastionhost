@@ -1,16 +1,15 @@
+# Support
 
-#Support
+> ⚠️**Note:** For the full details on the support statements, SLAs, and more for the Azure Verified Modules (AVM) initiative please visit [aka.ms/AVM/Support](https://aka.ms/avm/support) ⚠️
 
-## How to file issues and get help  
+## How to file issues and get help
 
-This project uses GitHub Issues to track bugs and feature requests. Please search the existing 
-issues before filing new issues to avoid duplicates.  For new issues, file your bug or 
-feature request as a new Issue.
+This project uses GitHub Issues to track bugs and feature requests. Please search the existing issues before filing new issues to avoid duplicates. For new issues, file your bug or feature request as a new issue.
 
-For help and questions about using this project, please **REPO MAINTAINER: INSERT INSTRUCTIONS HERE 
-FOR HOW TO ENGAGE REPO OWNERS OR COMMUNITY FOR HELP. COULD BE A STACK OVERFLOW TAG OR OTHER
-CHANNEL. WHERE WILL YOU HELP PEOPLE?**.
+Issues can be created and searched through for existing [issues here](https://github.com/Azure/terraform-azurerm-avm-template/issues).
 
-## Microsoft Support Policy  
+Please provide as much information as possible when filing an issue. Include screenshots or correlation IDs if possible (please redact any sensitive information).
 
-Support for this **PROJECT or PRODUCT** is limited to the resources listed above.
+For instructions on how to get deployments and correlation ID, please follow this link [here](https://learn.microsoft.com/azure/azure-resource-manager/templates/deployment-history?tabs=azure-portal#get-deployments-and-correlation-id).
+
+We may ask you to create an Azure support request once we have triaged the issue following the process documented [here](https://learn.microsoft.com/azure/azure-portal/supportability/how-to-create-azure-support-request).
