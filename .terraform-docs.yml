@@ -64,4 +64,6 @@ settings:
   read-comments: true
   required: true
   sensitive: true
+
   type: true
+
