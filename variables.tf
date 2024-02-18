@@ -108,8 +108,8 @@ bastion_host = {
   }
 }
 
-## AVM Required Interfaces
-//Diagnostic Settings
+# AVM Required Interfaces
+# Diagnostic Settings
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)
@@ -163,7 +163,7 @@ variable "diagnostic_settings" {
 }
 
 
-//RBAC Assignment
+# RBAC Assignment
 variable "role_assignments" {
   type = map(object({
     role_definition_id_or_name             = string
@@ -195,7 +195,7 @@ variable "role_assignments" {
   DESCRIPTION
 }
 
-//Resource Locks
+# Resource Locks
 variable "lock" {
   type = object({
     name = optional(string, null)
@@ -215,7 +215,7 @@ variable "lock" {
 DESCRIPTION
 }
 
-//Tags
+# Tags
 variable "tags" {
   type        = map(string)
   default     = {}

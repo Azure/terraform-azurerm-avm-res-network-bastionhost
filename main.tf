@@ -35,7 +35,7 @@ resource "azurerm_management_lock" "this" {
   lock_level = var.lock.kind
 }
 
-//Diagnostic Settings
+# Diagnostic Settings
 
 resource "azurerm_monitor_diagnostic_setting" "this" {
   for_each                       = var.diagnostic_settings
@@ -70,7 +70,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
   }
 }
 
-//Role Assignments
+# Role Assignments
 resource "azurerm_role_assignment" "this" {
   for_each                               = var.role_assignments
   scope                                  = azurerm_bastion_host.bastion.id
