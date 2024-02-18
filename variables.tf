@@ -31,7 +31,7 @@ variable "virtual_network_name" {
 
 variable "subnet_name" {
   description = <<DESCRIPTION
-  "The name of the subnet"
+  "The name of the subnet where Azure Bastion will be deployed. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail."
 
   Example usage:
 subnet_name = "AzureBastionSubnet"
@@ -88,24 +88,7 @@ bastion_host = {
     condition     = basename(var.bastion_host.ip_configuration.subnet_id) == "AzureBastionSubnet"
     error_message = "The subnet name must be AzureBastionSubnet."
   }
-  default = {
-    name                = "example-bastion"
-    resource_group_name = "example-resources"
-    location            = "West Europe"
-    copy_paste_enabled  = true
-    file_copy_enabled   = false // Remember that this is only applicable for Standard SKU
-    sku                 = "Standard"
-    ip_configuration = {
-      name                 = "example-ipconfig"
-      subnet_id            = "subnet-id"
-      public_ip_address_id = "public-ip-id"
-    }
-    ip_connect_enabled     = false // Only applicable for Standard SKU
-    scale_units            = 2     // Only changeable for Standard SKU and always 2 for Basic
-    shareable_link_enabled = false // Only applicable for Standard SKU
-    tunneling_enabled      = false // Only applicable for Standard SKU
-    tags                   = {}
-  }
+
 }
 
 # AVM Required Interfaces
