@@ -217,8 +217,9 @@ DESCRIPTION
 
 //Tags
 variable "tags" {
-  type        = map(any)
+  type        = map(string)
   default     = {}
+  nullable    = false
   description = <<DESCRIPTION
   The tags to associate with your network and subnets.
  Example usage:
