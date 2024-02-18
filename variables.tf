@@ -15,23 +15,19 @@ DESCRIPTION
 variable "resource_group_name" {
   description = <<DESCRIPTION
   "The name of the resource group in which to create the Azure Bastion."
-
   Example usage:
-resource_group_name = "myResourceGroup"
+  resource_group_name = "myResourceGroup"
   DESCRIPTION
   type        = string
 }
-
 variable "virtual_network_name" {
   description = <<DESCRIPTION
   "The name of the virtual network where Azure Bastion will be deployed."
-  
   Example usage:
   virtual_network_name = "myVnet"
   DESCRIPTION
   type        = string
 }
-
 
 variable "subnet_name" {
   description = <<DESCRIPTION
@@ -42,13 +38,11 @@ subnet_name = "AzureBastionSubnet"
   DESCRIPTION
   type        = string
   default     = "AzureBastionSubnet"
-
   validation {
     condition     = var.subnet_name == "AzureBastionSubnet"
     error_message = "The subnet name must be AzureBastionSubnet."
   }
 }
-
 
 variable "bastion_host" {
   description = <<DESCRIPTION
@@ -72,7 +66,7 @@ bastion_host = {
   shareable_link_enabled = false // Only applicable for Standard SKU
   tunneling_enabled      = false // Only applicable for Standard SKU
   DESCRIPTION
-    
+
   type = object({
     name                = string
     resource_group_name = string
@@ -90,11 +84,9 @@ bastion_host = {
     shareable_link_enabled = bool
     tunneling_enabled      = bool
   })
-
   validation {
     condition     = basename(var.bastion_host.ip_configuration.subnet_id) == "AzureBastionSubnet"
     error_message = "The subnet name must be AzureBastionSubnet."
-
   }
   default = {
     name                = "example-bastion"
@@ -114,8 +106,6 @@ bastion_host = {
     tunneling_enabled      = false // Only applicable for Standard SKU
     tags                   = {}
   }
-
-
 }
 
 ## AVM Required Interfaces
@@ -151,7 +141,6 @@ variable "diagnostic_settings" {
   }
   description = <<DESCRIPTION
   A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  
   - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
   - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
   - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
@@ -195,9 +184,7 @@ variable "role_assignments" {
   - `skip_service_principal_aad_check` - If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
   - `condition` - The condition which will be used to scope the role assignment.
   - `condition_version` - The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
-  
   > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
-
   Example usage:
  role_assignments = {
   assignment1 = {
@@ -208,9 +195,7 @@ variable "role_assignments" {
   DESCRIPTION
 }
 
-
 //Resource Locks
-
 variable "lock" {
   type = object({
     name = optional(string, null)
@@ -218,10 +203,6 @@ variable "lock" {
   })
   default  = {}
   nullable = false
-  })
-  description = "The lock level to apply to the Key Vault. Possible values are `None`, `CanNotDelete`, and `ReadOnly`."
-  default     = {}
-  nullable    = false
   validation {
     condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
     error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
@@ -234,9 +215,7 @@ variable "lock" {
 DESCRIPTION
 }
 
-
 //Tags
-
 variable "tags" {
   type        = map(any)
   default     = {}
@@ -248,7 +227,4 @@ variable "tags" {
   project = "myProject"
 }
 DESCRIPTION
-}
-  A mapping of tags to assign to the resource.
-  DESCRIPTION
 }
