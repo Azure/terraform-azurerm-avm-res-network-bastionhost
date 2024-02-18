@@ -34,6 +34,7 @@ module "azure_bastion" {
   ```
 
   ## AVM Versioning Notice
+  
 Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/
 
 <!-- markdownlint-disable MD033 -->
@@ -133,6 +134,7 @@ object({
     scale_units            = number
     shareable_link_enabled = bool
     tunneling_enabled      = bool
+
   })
 ```
 
@@ -174,17 +176,10 @@ Description:   A map of diagnostic settings to create on the Key Vault. The map 
   - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
   - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
 
-  Example usage:  
- diagnostic\_settings = {  
-  setting1 = {  
-    log\_analytics\_destination\_type = "Dedicated"  
-    workspace\_resource\_id = "logAnalyticsWorkspaceResourceId"
-  }
-}
-
 Type:
 
 ```hcl
+
 map(object({
     name                                     = optional(string, null)
     log_categories                           = optional(set(string), [])
@@ -196,6 +191,7 @@ map(object({
     event_hub_authorization_rule_resource_id = optional(string, null)
     event_hub_name                           = optional(string, null)
     marketplace_partner_resource_id          = optional(string, null)
+
   }))
 ```
 
@@ -207,19 +203,13 @@ Description: This variable controls whether or not telemetry is enabled for the 
 For more information see https://aka.ms/avm/telemetryinfo.  
 If it is set to false, then no telemetry will be collected.
 
-Example usage:  
-enable\_telemetry = false
-
 Type: `bool`
 
 Default: `true`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description:   The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.  
-  Example usage:  
-  name = "test-lock"  
-  kind = "ReadOnly"
+Description: The lock level to apply to the Key Vault. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
 
 Type:
 
@@ -227,7 +217,6 @@ Type:
 object({
     name = optional(string, null)
     kind = optional(string, "None")
-
   })
 ```
 
@@ -246,14 +235,6 @@ Description:   A map of role assignments to create on the Key Vault. The map key
 
   > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
 
-  Example usage:  
- role\_assignments = {  
-  assignment1 = {  
-    role\_definition\_id\_or\_name = "Contributor"  
-    principal\_id = "servicePrincipalId"
-  }
-}
-
 Type:
 
 ```hcl
@@ -265,6 +246,7 @@ map(object({
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
+
   }))
 ```
 
@@ -274,21 +256,13 @@ Default: `{}`
 
 Description:   "The name of the subnet"
 
-  Example usage:  
-subnet\_name = "AzureBastionSubnet"
-
 Type: `string`
 
 Default: `"AzureBastionSubnet"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
-Description:   The tags to associate with your network and subnets.  
- Example usage:  
- tags = {  
-  environment = "production"  
-  project = "myProject"
-}
+Description:   A mapping of tags to assign to the resource.
 
 Type: `map(any)`
 
@@ -310,4 +284,7 @@ No modules.
 ## Data Collection
 
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+
+---
+
 <!-- END_TF_DOCS -->

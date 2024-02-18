@@ -25,6 +25,7 @@ resource_group_name = "myResourceGroup"
 variable "virtual_network_name" {
   description = <<DESCRIPTION
   "The name of the virtual network where Azure Bastion will be deployed."
+  
   Example usage:
   virtual_network_name = "myVnet"
   DESCRIPTION
@@ -71,6 +72,7 @@ bastion_host = {
   shareable_link_enabled = false // Only applicable for Standard SKU
   tunneling_enabled      = false // Only applicable for Standard SKU
   DESCRIPTION
+    
   type = object({
     name                = string
     resource_group_name = string
@@ -213,12 +215,13 @@ variable "lock" {
   type = object({
     name = optional(string, null)
     kind = optional(string, "None")
-
-
   })
-
   default  = {}
   nullable = false
+  })
+  description = "The lock level to apply to the Key Vault. Possible values are `None`, `CanNotDelete`, and `ReadOnly`."
+  default     = {}
+  nullable    = false
   validation {
     condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
     error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
@@ -245,4 +248,7 @@ variable "tags" {
   project = "myProject"
 }
 DESCRIPTION
+}
+  A mapping of tags to assign to the resource.
+  DESCRIPTION
 }
