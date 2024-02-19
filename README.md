@@ -95,6 +95,24 @@ bastion\_host = {
   shareable\_link\_enabled = false // Only applicable for Standard SKU  
   tunneling\_enabled      = false // Only applicable for Standard SKU
 
+  Example usage:  
+bastion\_host = {  
+  name                = "example-bastion"  
+  resource\_group\_name = "example-resources"  
+  location            = "West Europe"  
+  copy\_paste\_enabled  = true  
+  file\_copy\_enabled   = false // Remember that this is only applicable for Standard SKU  
+  sku                 = "Standard"  
+  ip\_configuration = {  
+    name                 = "example-ipconfig"  
+    subnet\_id            = "subnet-id"  
+    public\_ip\_address\_id = "public-ip-id"
+  }  
+  ip\_connect\_enabled     = false // Only applicable for Standard SKU  
+  scale\_units            = 2     // Only changeable for Standard SKU and always 2 for Basic  
+  shareable\_link\_enabled = false // Only applicable for Standard SKU  
+  tunneling\_enabled      = false // Only applicable for Standard SKU
+
 Type:
 
 ```hcl
@@ -114,6 +132,7 @@ object({
     scale_units            = number
     shareable_link_enabled = bool
     tunneling_enabled      = bool
+
   })
 ```
 
@@ -167,6 +186,7 @@ Description:   A map of diagnostic settings to create on the Key Vault. The map 
 Type:
 
 ```hcl
+
 map(object({
     name                                     = optional(string, null)
     log_categories                           = optional(set(string), [])
@@ -178,6 +198,7 @@ map(object({
     event_hub_authorization_rule_resource_id = optional(string, null)
     event_hub_name                           = optional(string, null)
     marketplace_partner_resource_id          = optional(string, null)
+
   }))
 ```
 
@@ -244,6 +265,7 @@ map(object({
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
+
   }))
 ```
 
