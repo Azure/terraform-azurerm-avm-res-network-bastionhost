@@ -1,11 +1,10 @@
-
-# Azure Verified Module for Azure Bastion 
+# Azure Verified Module for Azure Bastion
 
 This module provides a generic way to create and manage a Azure Bastion resource.
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
 
-```
+```terraform
 module "azure_bastion" {
   source = "./path_to_this_module"
 
@@ -35,5 +34,6 @@ module "azure_bastion" {
   }
   ```
 
-  ## AVM Versioning Notice
-Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/
+## AVM Versioning Notice
+
+Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
