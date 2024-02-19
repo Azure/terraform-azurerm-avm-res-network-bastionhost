@@ -1,11 +1,13 @@
 <!-- BEGIN_TF_DOCS -->
 
+
 # Azure Verified Module for Azure Bastion
 
 This module provides a generic way to create and manage a Azure Bastion resource.
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
 
+```terraform
 ```terraform
 module "azure_bastion" {
   source = "./path_to_this_module"
@@ -99,6 +101,28 @@ Description:   "Configuration for Azure Bastion Host. The variable requires a su
   tunneling_enabled      = false // Only applicable for Standard SKU
 ```
 
+  Example usage:
+
+  ```terraform
+
+  bastion_host = {
+  name                = "example-bastion"
+  resource_group_name = "example-resources"
+  location            = "West Europe"
+  copy_paste_enabled  = true
+  file_copy_enabled   = false // Remember that this is only applicable for Standard SKU
+  sku                 = "Standard"
+  ip_configuration = {
+    name                 = "example-ipconfig"
+    subnet_id            = "subnet-id"
+    public_ip_address_id = "public-ip-id"
+  }
+  ip_connect_enabled     = false // Only applicable for Standard SKU
+  scale_units            = 2     // Only changeable for Standard SKU and always 2 for Basic
+  shareable_link_enabled = false // Only applicable for Standard SKU
+  tunneling_enabled      = false // Only applicable for Standard SKU
+```
+
 Type:
 
 ```hcl
@@ -121,6 +145,25 @@ object({
   })
 ```
 
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description:   "The name of the resource group in which to create the Azure Bastion."  
+  Example usage:  
+  resource\_group\_name = "myResourceGroup"
+
+Type: `string`
+
+### <a name="input_virtual_network_name"></a> [virtual\_network\_name](#input\_virtual\_network\_name)
+
+Description:   "The name of the virtual network where Azure Bastion will be deployed."  
+  Example usage:  
+  virtual\_network\_name = "myVnet"
+
+Type: `string`
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
 Description:   "The name of the resource group in which to create the Azure Bastion."  
@@ -164,6 +207,17 @@ Description:   A map of diagnostic settings to create on the Key Vault. The map 
   }
 }
 
+  Example usage:
+
+  ```terraform
+
+   diagnostic\_settings = {  
+    setting1 = {  
+    log\_analytics\_destination\_type = "Dedicated"  
+    workspace\_resource\_id = "logAnalyticsWorkspaceResourceId"
+               }
+       }
+
 Type:
 
 ```hcl
@@ -187,7 +241,11 @@ Default: `{}`
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
 For more information see <https://aka.ms/avm/telemetryinfo>.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
 If it is set to false, then no telemetry will be collected.
+
+Example usage:  
+enable\_telemetry = false
 
 Example usage:  
 enable\_telemetry = false
@@ -198,6 +256,10 @@ Default: `true`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
+Description:   The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.  
+  Example usage:  
+  name = "test-lock"  
+  kind = "ReadOnly"
 Description:   The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.  
   Example usage:  
   name = "test-lock"  
@@ -260,6 +322,10 @@ Description:   "The name of the subnet where Azure Bastion will be deployed. The
 
   Example usage:  
 subnet\_name = "AzureBastionSubnet"
+Description:   "The name of the subnet where Azure Bastion will be deployed. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail."
+
+  Example usage:  
+subnet\_name = "AzureBastionSubnet"
 
 Type: `string`
 
@@ -274,6 +340,7 @@ Description:   The tags to associate with your network and subnets.
   project = "myProject"
 }
 
+Type: `map(string)`
 Type: `map(string)`
 
 Default: `{}`
