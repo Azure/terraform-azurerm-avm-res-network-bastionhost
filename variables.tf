@@ -46,10 +46,11 @@ subnet_name = "AzureBastionSubnet"
 
 variable "bastion_host" {
   description = <<DESCRIPTION
-  "Configuration for Azure Bastion Host. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail"
+  "Configuration for Azure Bastion Host. The variable requires a subnet with the name ***AzureBastionSubnet***, else the deployment will fail"
 
   Example usage:
-  ```terraform
+
+  ```hcl
   bastion_host = {
   name                = "example-bastion"
   resource_group_name = "example-resources"
