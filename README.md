@@ -153,13 +153,16 @@ Description:   A map of diagnostic settings to create on the Key Vault. The map 
   - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
   - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
 
-  Example usage:  
- diagnostic\_settings = {  
-  setting1 = {  
-    log\_analytics\_destination\_type = "Dedicated"  
-    workspace\_resource\_id = "logAnalyticsWorkspaceResourceId"
+  Example usage:
+  ```hcl
+
+ diagnostic_settings = {
+  setting1 = {
+    log_analytics_destination_type = "Dedicated"
+    workspace_resource_id = "logAnalyticsWorkspaceResourceId"
   }
 }
+```
 
 Type:
 
