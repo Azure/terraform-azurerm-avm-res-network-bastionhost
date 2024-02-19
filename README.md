@@ -284,7 +284,8 @@ Default: `"AzureBastionSubnet"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
-Description:   The tags to associate with your network and subnets.  
+Description:   The tags to associate with your network and subnets.
+  
  Example usage:  
  tags = {  
   environment = "production"  
