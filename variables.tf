@@ -49,7 +49,8 @@ variable "bastion_host" {
   "Configuration for Azure Bastion Host. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail"
 
   Example usage:
-bastion_host = {
+  ```terraform
+  bastion_host = {
   name                = "example-bastion"
   resource_group_name = "example-resources"
   location            = "West Europe"
@@ -65,6 +66,7 @@ bastion_host = {
   scale_units            = 2     // Only changeable for Standard SKU and always 2 for Basic
   shareable_link_enabled = false // Only applicable for Standard SKU
   tunneling_enabled      = false // Only applicable for Standard SKU
+  ```
   DESCRIPTION
 
   type = object({

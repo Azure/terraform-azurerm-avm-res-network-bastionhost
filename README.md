@@ -34,7 +34,7 @@ module "azure_bastion" {
   }
   ```
 
-# AVM Versioning Notice
+## AVM Versioning Notice
 
 Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 
@@ -77,41 +77,27 @@ The following input variables are required:
 
 Description:   "Configuration for Azure Bastion Host. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail"
 
-  Example usage:  
-bastion\_host = {  
-  name                = "example-bastion"  
-  resource\_group\_name = "example-resources"  
-  location            = "West Europe"  
-  copy\_paste\_enabled  = true  
-  file\_copy\_enabled   = false // Remember that this is only applicable for Standard SKU  
-  sku                 = "Standard"  
-  ip\_configuration = {  
-    name                 = "example-ipconfig"  
-    subnet\_id            = "subnet-id"  
-    public\_ip\_address\_id = "public-ip-id"
-  }  
-  ip\_connect\_enabled     = false // Only applicable for Standard SKU  
-  scale\_units            = 2     // Only changeable for Standard SKU and always 2 for Basic  
-  shareable\_link\_enabled = false // Only applicable for Standard SKU  
-  tunneling\_enabled      = false // Only applicable for Standard SKU
+  Example usage:
 
-  Example usage:  
-bastion\_host = {  
-  name                = "example-bastion"  
-  resource\_group\_name = "example-resources"  
-  location            = "West Europe"  
-  copy\_paste\_enabled  = true  
-  file\_copy\_enabled   = false // Remember that this is only applicable for Standard SKU  
-  sku                 = "Standard"  
-  ip\_configuration = {  
-    name                 = "example-ipconfig"  
-    subnet\_id            = "subnet-id"  
-    public\_ip\_address\_id = "public-ip-id"
-  }  
-  ip\_connect\_enabled     = false // Only applicable for Standard SKU  
-  scale\_units            = 2     // Only changeable for Standard SKU and always 2 for Basic  
-  shareable\_link\_enabled = false // Only applicable for Standard SKU  
-  tunneling\_enabled      = false // Only applicable for Standard SKU
+  ```terraform
+
+  bastion_host = {
+  name                = "example-bastion"
+  resource_group_name = "example-resources"
+  location            = "West Europe"
+  copy_paste_enabled  = true
+  file_copy_enabled   = false // Remember that this is only applicable for Standard SKU
+  sku                 = "Standard"
+  ip_configuration = {
+    name                 = "example-ipconfig"
+    subnet_id            = "subnet-id"
+    public_ip_address_id = "public-ip-id"
+  }
+  ip_connect_enabled     = false // Only applicable for Standard SKU
+  scale_units            = 2     // Only changeable for Standard SKU and always 2 for Basic
+  shareable_link_enabled = false // Only applicable for Standard SKU
+  tunneling_enabled      = false // Only applicable for Standard SKU
+```
 
 Type:
 
@@ -132,7 +118,6 @@ object({
     scale_units            = number
     shareable_link_enabled = bool
     tunneling_enabled      = bool
-
   })
 ```
 
@@ -161,7 +146,6 @@ The following input variables are optional (have default values):
 Description:   A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
 - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
-  
 - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
 - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
 - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
@@ -172,21 +156,17 @@ Description:   A map of diagnostic settings to create on the Key Vault. The map 
 - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
 - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
 
-  Example usage:
-
-  ```terraform
-
-   diagnostic\_settings = {  
-    setting1 = {  
+  Example usage:  
+ diagnostic\_settings = {  
+  setting1 = {  
     log\_analytics\_destination\_type = "Dedicated"  
     workspace\_resource\_id = "logAnalyticsWorkspaceResourceId"
-               }
-       }
+  }
+}
 
 Type:
 
 ```hcl
-
 map(object({
     name                                     = optional(string, null)
     log_categories                           = optional(set(string), [])
@@ -198,7 +178,6 @@ map(object({
     event_hub_authorization_rule_resource_id = optional(string, null)
     event_hub_name                           = optional(string, null)
     marketplace_partner_resource_id          = optional(string, null)
-
   }))
 ```
 
@@ -246,13 +225,18 @@ Description:   A map of role assignments to create on the Key Vault. The map key
 - `condition` - The condition which will be used to scope the role assignment.
 - `condition_version` - The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
   > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.  
+
   Example usage:  
+
+```terraform
+
  role\_assignments = {  
   assignment1 = {  
     role\_definition\_id\_or\_name = "Contributor"  
     principal\_id = "servicePrincipalId"
   }
 }
+```
 
 Type:
 
@@ -265,7 +249,6 @@ map(object({
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
-
   }))
 ```
 
@@ -284,8 +267,7 @@ Default: `"AzureBastionSubnet"`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
-Description:   The tags to associate with your network and subnets.
-  
+Description:   The tags to associate with your network and subnets.  
  Example usage:  
  tags = {  
   environment = "production"  
