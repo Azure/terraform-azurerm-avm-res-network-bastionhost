@@ -139,12 +139,15 @@ variable "diagnostic_settings" {
   - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
 
   Example usage:
+  ```hcl
+
  diagnostic_settings = {
   setting1 = {
     log_analytics_destination_type = "Dedicated"
     workspace_resource_id = "logAnalyticsWorkspaceResourceId"
   }
 }
+```
   DESCRIPTION
 }
 
