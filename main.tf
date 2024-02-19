@@ -4,8 +4,6 @@ resource "azurerm_bastion_host" "bastion" {
   resource_group_name = var.bastion_host.resource_group_name
   location            = var.bastion_host.location
   sku                 = var.bastion_host.sku
-
-
   ip_configuration {
     name                 = var.bastion_host.ip_configuration.name
     subnet_id            = var.bastion_host.ip_configuration.subnet_id
@@ -19,6 +17,12 @@ resource "azurerm_bastion_host" "bastion" {
   scale_units            = var.bastion_host.sku == "Standard" ? var.bastion_host.scale_units : null
   shareable_link_enabled = var.bastion_host.sku == "Standard" ? var.bastion_host.shareable_link_enabled : null
   tunneling_enabled      = var.bastion_host.sku == "Standard" ? var.bastion_host.tunneling_enabled : null
+
+  tags = {
+    key           = "value"
+    "another-key" = "another-value"
+    integers      = 123
+  }
 }
 
 
@@ -31,7 +35,7 @@ resource "azurerm_management_lock" "this" {
   lock_level = var.lock.kind
 }
 
-//Diagnostic Settings
+# Diagnostic Settings
 
 resource "azurerm_monitor_diagnostic_setting" "this" {
   for_each                       = var.diagnostic_settings
@@ -66,7 +70,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
   }
 }
 
-//Role Assignments
+# Role Assignments
 resource "azurerm_role_assignment" "this" {
   for_each                               = var.role_assignments
   scope                                  = azurerm_bastion_host.bastion.id
