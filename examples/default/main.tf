@@ -1,20 +1,8 @@
 
-
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetryinfo.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
-}
-
-
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  name     = "bastion-rg"
   location = "eastasia"
+  name     = "bastion-rg"
 }
 # Using the AVM module for virtual network
 module "virtualnetwork" {
@@ -35,12 +23,11 @@ module "virtualnetwork" {
 }
 
 resource "azurerm_public_ip" "example" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
   name                = "acceptanceTestPublicIp1"
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-  allocation_method   = "Static"
   sku                 = "Standard"
-
   tags = {
     environment = "Production"
   }
