@@ -46,12 +46,12 @@ resource "azurerm_public_ip" "example" {
 module "azure_bastion" {
   source = "../../"
 
-  // Pass in the required variables from the module
+  # Pass in the required variables from the module
   enable_telemetry     = true
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = module.virtualnetwork.vnet-resource.name
 
-  // Define the bastion host configuration
+  # Define the bastion host configuration
   bastion_host = {
     name                = "my-bastion"
     resource_group_name = azurerm_resource_group.this.name
