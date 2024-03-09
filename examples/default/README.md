@@ -9,7 +9,7 @@ This deploys the module in its simplest form.
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
   location = "eastasia"
-  name     = "bastion-rg"
+  name     = "azbastion-rg"
 }
 # Using the AVM module for virtual network
 module "virtualnetwork" {
