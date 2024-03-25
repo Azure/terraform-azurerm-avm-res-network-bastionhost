@@ -4,7 +4,7 @@
 
 formatter: "markdown document" # this is required
 
-version: "~> 0.16.0"
+version: "~> 0.17.0"
 
 header-from: "_header.md"
 footer-from: "_footer.md"
@@ -64,6 +64,4 @@ settings:
   read-comments: true
   required: true
   sensitive: true
-
   type: true
-
