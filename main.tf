@@ -18,11 +18,7 @@ resource "azurerm_bastion_host" "bastion" {
   shareable_link_enabled = var.bastion_host.sku == "Standard" ? var.bastion_host.shareable_link_enabled : null
   tunneling_enabled      = var.bastion_host.sku == "Standard" ? var.bastion_host.tunneling_enabled : null
 
-  tags = {
-    key           = "value"
-    "another-key" = "another-value"
-    integers      = 123
-  }
+  tags = var.tags
 }
 
 
