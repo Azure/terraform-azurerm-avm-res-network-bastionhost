@@ -4,6 +4,7 @@ resource "azurerm_bastion_host" "bastion" {
   name                = var.name
   resource_group_name = var.resource_group_name
   # Conditional arguments based on SKU value
+
   copy_paste_enabled     = var.sku == "Standard" ? var.copy_paste_enabled : null
   file_copy_enabled      = var.sku == "Standard" ? var.file_copy_enabled : null
   ip_connect_enabled     = var.sku == "Standard" ? var.ip_connect_enabled : null
@@ -18,6 +19,8 @@ resource "azurerm_bastion_host" "bastion" {
     public_ip_address_id = var.ip_configuration.public_ip_address_id
     subnet_id            = var.ip_configuration.subnet_id
   }
+
+
 }
 
 
