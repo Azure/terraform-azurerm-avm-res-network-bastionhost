@@ -1,97 +1,74 @@
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
+variable "ip_configuration" {
+  type = object({
+    name                 = string
+    subnet_id            = string
+    public_ip_address_id = string
+  })
   description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetryinfo.
-If it is set to false, then no telemetry will be collected.
+  
+  IP configuration for the Azure Bastion Host. The subnet must be named AzureBastionSubnet."
 
-Example usage:
-enable_telemetry = false
-DESCRIPTION
+  Example Usage:
+  ip_configuration = {
+    name                 = "myIpConfiguration"
+    subnet_id            = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/AzureBastionSubnet"
+    public_ip_address_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/publicIPAddresses/myPublicIp"
+  }
+  DESCRIPTION
+
+  validation {
+    condition     = basename(var.ip_configuration.subnet_id) == "AzureBastionSubnet"
+    error_message = "The subnet name must be AzureBastionSubnet."
+  }
+}
+
+variable "location" {
+  type        = string
+  description = <<DESCRIPTION
+  "Value for the location of the Bastion Host."
+
+  Example usage:
+  location = "East US"
+  DESCRIPTION
+}
+
+variable "name" {
+  type        = string
+  description = <<DESCRIPTION
+  "Name of the Azure Bastion Host."
+
+  Example Usage:
+  name = "myBastionHost"
+  DESCRIPTION
 }
 
 # This is required for most resource modules
 variable "resource_group_name" {
+  type        = string
   description = <<DESCRIPTION
   "The name of the resource group in which to create the Azure Bastion."
   Example usage:
   resource_group_name = "myResourceGroup"
   DESCRIPTION
-  type        = string
 }
+
 variable "virtual_network_name" {
+  type        = string
   description = <<DESCRIPTION
   "The name of the virtual network where Azure Bastion will be deployed."
   Example usage:
   virtual_network_name = "myVnet"
   DESCRIPTION
-  type        = string
 }
 
-variable "subnet_name" {
+variable "copy_paste_enabled" {
+  type        = bool
+  default     = true
   description = <<DESCRIPTION
-  "The name of the subnet where Azure Bastion will be deployed. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail."
-
-  Example usage:
-subnet_name = "AzureBastionSubnet"
+  Enable or disable copy/paste through the Bastion session. Default is true.
+  Example Usage:
+  copy_paste_enabled = true
   DESCRIPTION
-  type        = string
-  default     = "AzureBastionSubnet"
-  validation {
-    condition     = var.subnet_name == "AzureBastionSubnet"
-    error_message = "The subnet name must be AzureBastionSubnet."
-  }
-}
-
-variable "bastion_host" {
-  description = <<DESCRIPTION
-  "Configuration for Azure Bastion Host. The variable requires a subnet with the name ***AzureBastionSubnet***, else the deployment will fail"
-
-  Example usage:
-
-  ```hcl
-  bastion_host = {
-  name                = "example-bastion"
-  resource_group_name = "example-resources"
-  location            = "West Europe"
-  copy_paste_enabled  = true
-  file_copy_enabled   = false // Remember that this is only applicable for Standard SKU
-  sku                 = "Standard"
-  ip_configuration = {
-    name                 = "example-ipconfig"
-    subnet_id            = "subnet-id"
-    public_ip_address_id = "public-ip-id"
-  }
-  ip_connect_enabled     = false // Only applicable for Standard SKU
-  scale_units            = 2     // Only changeable for Standard SKU and always 2 for Basic
-  shareable_link_enabled = false // Only applicable for Standard SKU
-  tunneling_enabled      = false // Only applicable for Standard SKU
-  ```
-  DESCRIPTION
-
-  type = object({
-    name                = string
-    resource_group_name = string
-    location            = string
-    copy_paste_enabled  = bool
-    file_copy_enabled   = bool
-    sku                 = string
-    ip_configuration = object({
-      name                 = string
-      subnet_id            = string
-      public_ip_address_id = string
-    })
-    ip_connect_enabled     = bool
-    scale_units            = number
-    shareable_link_enabled = bool
-    tunneling_enabled      = bool
-  })
-  validation {
-    condition     = basename(var.bastion_host.ip_configuration.subnet_id) == "AzureBastionSubnet"
-    error_message = "The subnet name must be AzureBastionSubnet."
-  }
-
 }
 
 # AVM Required Interfaces
@@ -109,22 +86,7 @@ variable "diagnostic_settings" {
     event_hub_name                           = optional(string, null)
     marketplace_partner_resource_id          = optional(string, null)
   }))
-  default  = {}
-  nullable = false
-
-  validation {
-    condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
-    error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
-  }
-  validation {
-    condition = alltrue(
-      [
-        for _, v in var.diagnostic_settings :
-        v.workspace_resource_id != null || v.storage_account_resource_id != null || v.event_hub_authorization_rule_resource_id != null || v.marketplace_partner_resource_id != null
-      ]
-    )
-    error_message = "At least one of `workspace_resource_id`, `storage_account_resource_id`, `marketplace_partner_resource_id`, or `event_hub_authorization_rule_resource_id`, must be set."
-  }
+  default     = {}
   description = <<DESCRIPTION
   A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
   - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
@@ -149,8 +111,77 @@ variable "diagnostic_settings" {
 }
 ```
   DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
+    error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
+  }
+  validation {
+    condition = alltrue(
+      [
+        for _, v in var.diagnostic_settings :
+        v.workspace_resource_id != null || v.storage_account_resource_id != null || v.event_hub_authorization_rule_resource_id != null || v.marketplace_partner_resource_id != null
+      ]
+    )
+    error_message = "At least one of `workspace_resource_id`, `storage_account_resource_id`, `marketplace_partner_resource_id`, or `event_hub_authorization_rule_resource_id`, must be set."
+  }
 }
 
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+This variable controls whether or not telemetry is enabled for the module.
+For more information see https://aka.ms/avm/telemetryinfo.
+If it is set to false, then no telemetry will be collected.
+
+Example usage:
+enable_telemetry = false
+DESCRIPTION
+}
+
+variable "file_copy_enabled" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+  Enable or disable file copy through the Bastion session. Default is true."
+  Example Usage:
+  file_copy_enabled = true
+  DESCRIPTION
+}
+
+variable "ip_connect_enabled" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+  
+  Enable or disable IP connectivity through the Bastion Host. Default is true.
+
+  Example Usage:
+  ip_connect_enabled = true
+  DESCRIPTION
+}
+
+# Resource Locks
+variable "lock" {
+  type = object({
+    kind = string
+    name = optional(string, null)
+  })
+  default     = null
+  description = <<DESCRIPTION
+  Controls the Resource Lock configuration for this resource. The following properties can be specified:
+  
+  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+  DESCRIPTION
+
+  validation {
+    condition     = var.lock != null ? contains(["CanNotDelete", "ReadOnly"], var.lock.kind) : true
+    error_message = "Lock kind must be either `\"CanNotDelete\"` or `\"ReadOnly\"`."
+  }
+}
 
 # RBAC Assignment
 variable "role_assignments" {
@@ -182,33 +213,59 @@ variable "role_assignments" {
   }
 }
   DESCRIPTION
+  nullable    = false
 }
 
-# Resource Locks
-variable "lock" {
-  type = object({
-    name = optional(string, null)
-    kind = optional(string, "None")
-  })
-  default  = {}
-  nullable = false
-  validation {
-    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
-    error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
-  }
+variable "scale_units" {
+  type        = number
+  default     = 2
   description = <<DESCRIPTION
-  The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+  The number of scale units for the Bastion Host. Default is 2."
+  Example Usage:
+  scale_units = 2
+  DESCRIPTION
+}
+
+variable "shareable_link_enabled" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+  Enable or disable shareable link feature on the Bastion Host."
+  Example Usage:
+  shareable_link_enabled = true
+  DESCRIPTION
+}
+
+variable "sku" {
+  type        = string
+  default     = "Standard"
+  description = <<DESCRIPTION
+  "SKU for the Bastion Host, either Basic or Standard. Default is Standard."
+  Example Usage:
+  sku = "Standard"
+  DESCRIPTION
+}
+
+variable "subnet_name" {
+  type        = string
+  default     = "AzureBastionSubnet"
+  description = <<DESCRIPTION
+  "The name of the subnet where Azure Bastion will be deployed. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail."
+
   Example usage:
-  name = "test-lock"
-  kind = "ReadOnly"
-DESCRIPTION
+subnet_name = "AzureBastionSubnet"
+  DESCRIPTION
+
+  validation {
+    condition     = var.subnet_name == "AzureBastionSubnet"
+    error_message = "The subnet name must be AzureBastionSubnet."
+  }
 }
 
 # Tags
 variable "tags" {
   type        = map(string)
-  default     = {}
-  nullable    = false
+  default     = null
   description = <<DESCRIPTION
   The tags to associate with your network and subnets.
  Example usage:
@@ -217,4 +274,14 @@ variable "tags" {
   project = "myProject"
 }
 DESCRIPTION
+}
+
+variable "tunneling_enabled" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+  Enable or disable tunneling through the Bastion Host. Default is true."
+  Example Usage:
+  tunneling_enabled = true
+  DESCRIPTION
 }

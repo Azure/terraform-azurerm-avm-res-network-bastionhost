@@ -20,8 +20,8 @@ DESCRIPTION
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  name     = "bastion-rg"
   location = "eastasia"
+  name     = "bastion-rg"
 }
 # Using the AVM module for virtual network
 module "virtualnetwork" {
@@ -42,12 +42,11 @@ module "virtualnetwork" {
 }
 
 resource "azurerm_public_ip" "example" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
   name                = "acceptanceTestPublicIp1"
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-  allocation_method   = "Static"
   sku                 = "Standard"
-
   tags = {
     environment = "Production"
   }
@@ -58,54 +57,32 @@ resource "azurerm_public_ip" "example" {
 # This is the module call
 module "azure_bastion" {
   source = "../../"
-
   // Pass in the required variables from the module
   enable_telemetry     = true
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = module.virtualnetwork.vnet-resource.name
-
   // Define the bastion host configuration
-  bastion_host = {
-    name                = "my-bastion"
-    resource_group_name = azurerm_resource_group.this.name
-    location            = "eastasia"
-    copy_paste_enabled  = true
-    file_copy_enabled   = false
-    sku                 = "Standard"
-    ip_configuration = {
-      name                 = "my-ipconfig"
-      subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].id
-      public_ip_address_id = azurerm_public_ip.example.id
-    }
-    ip_connect_enabled     = true
-    scale_units            = 2
-    shareable_link_enabled = true
-    tunneling_enabled      = true
-    tags = {
-      environment = "production"
-    }
+  name               = "my_bastion"
+  location           = azurerm_resource_group.this.location
+  copy_paste_enabled = true
+  file_copy_enabled  = false
+  sku                = "Standard"
+  ip_configuration = {
+    name                 = "my-ipconfig"
+    subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].id
+    public_ip_address_id = azurerm_public_ip.example.id
+  }
+  ip_connect_enabled     = true
+  scale_units            = 2
+  shareable_link_enabled = true
+  tunneling_enabled      = true
+  tags = {
+    environment = "production"
+  }
 
-    lock = {
-      name = "my-lock"
-      kind = "ReadOnly"
-
-    }
-    diagnostic_settings = {
-      diag_setting_1 = {
-        name                                     = "diagSetting1"
-        log_groups                               = ["allLogs"]
-        metric_categories                        = ["AllMetrics"]
-        log_analytics_destination_type           = "Dedicated"
-        workspace_resource_id                    = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}"
-        storage_account_resource_id              = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}"
-        event_hub_authorization_rule_resource_id = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EventHub/namespaces/{namespaceName}/eventhubs/{eventHubName}/authorizationrules/{authorizationRuleName}"
-        event_hub_name                           = "{eventHubName}"
-        marketplace_partner_resource_id          = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{partnerResourceProvider}/{partnerResourceType}/{partnerResourceName}"
-      }
-    }
-
-
-
+  lock = {
+    name = "my-lock"
+    kind = "ReadOnly"
 
   }
 }
@@ -164,11 +141,11 @@ The following outputs are exported:
 
 ### <a name="output_bastion_host"></a> [bastion\_host](#output\_bastion\_host)
 
-Description: n/a
+Description: The name of the bastion host resource
 
 ### <a name="output_bastion_host_id"></a> [bastion\_host\_id](#output\_bastion\_host\_id)
 
-Description: n/a
+Description: The id of the bastion host resource
 
 ## Modules
 
@@ -194,5 +171,6 @@ The software may collect information about you and your use of the software and 
 ---
 
 ## AVM Versioning Notice
-Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/
+
+Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 <!-- END_TF_DOCS -->

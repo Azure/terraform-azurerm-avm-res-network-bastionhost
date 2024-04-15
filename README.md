@@ -1,43 +1,41 @@
 <!-- BEGIN_TF_DOCS -->
-
 # Azure Verified Module for Azure Bastion
 
 This module provides a generic way to create and manage a Azure Bastion resource.
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
 
-```
+```hcl
 module "azure_bastion" {
-  source = "./path_to_this_module"
-
+  source = "../../"
+  // Pass in the required variables from the module
   enable_telemetry     = true
   resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.example.name
-
+  virtual_network_name = module.virtualnetwork.vnet-resource.name
   // Define the bastion host configuration
-  bastion_host = {
-    name                = "my-bastion"
-    resource_group_name = azurerm_resource_group.this.name
-    location            = "southeastasia"
-    copy_paste_enabled  = true
-    file_copy_enabled   = false
-    sku                 = "Basic"
-    ip_configuration = {
-      name                 = "my-ipconfig"
-      subnet_id            = "subnet_id_resource"
-      public_ip_address_id = azurerm_public_ip.example.id
-    }
-    ip_connect_enabled     = true
-    scale_units            = 2
-    shareable_link_enabled = true
-    tunneling_enabled      = true
+  name               = "my_bastion"
+  location           = azurerm_resource_group.this.location
+  copy_paste_enabled = true
+  file_copy_enabled  = false
+  sku                = "Standard"
+  ip_configuration = {
+    name                 = "my-ipconfig"
+    subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].id
+    public_ip_address_id = azurerm_public_ip.example.id
   }
-  ```
-
+  ip_connect_enabled     = true
+  scale_units            = 2
+  shareable_link_enabled = true
+  tunneling_enabled      = true
+  tags = {
+    environment = "production"
+  }
+}
+```
 
 # AVM Versioning Notice
 
-Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/
+Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 
 <!-- markdownlint-disable MD033 -->
 ## Requirements
@@ -74,52 +72,45 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_bastion_host"></a> [bastion\_host](#input\_bastion\_host)
+### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
 
-Description:   "Configuration for Azure Bastion Host. The variable requires a subnet with the name ***AzureBastionSubnet***, else the deployment will fail"
+Description:   
+  IP configuration for the Azure Bastion Host. The subnet must be named AzureBastionSubnet."
 
-  Example usage:
-
-  ```hcl
-  bastion_host = {
-  name                = "example-bastion"
-  resource_group_name = "example-resources"
-  location            = "West Europe"
-  copy_paste_enabled  = true
-  file_copy_enabled   = false // Remember that this is only applicable for Standard SKU
-  sku                 = "Standard"
-  ip_configuration = {
-    name                 = "example-ipconfig"
-    subnet_id            = "subnet-id"
-    public_ip_address_id = "public-ip-id"
+  Example Usage:  
+  ip\_configuration = {  
+    name                 = "myIpConfiguration"  
+    subnet\_id            = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/AzureBastionSubnet"  
+    public\_ip\_address\_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Network/publicIPAddresses/myPublicIp"
   }
-  ip_connect_enabled     = false // Only applicable for Standard SKU
-  scale_units            = 2     // Only changeable for Standard SKU and always 2 for Basic
-  shareable_link_enabled = false // Only applicable for Standard SKU
-  tunneling_enabled      = false // Only applicable for Standard SKU
-```
 
 Type:
 
 ```hcl
 object({
-    name                = string
-    resource_group_name = string
-    location            = string
-    copy_paste_enabled  = bool
-    file_copy_enabled   = bool
-    sku                 = string
-    ip_configuration = object({
-      name                 = string
-      subnet_id            = string
-      public_ip_address_id = string
-    })
-    ip_connect_enabled     = bool
-    scale_units            = number
-    shareable_link_enabled = bool
-    tunneling_enabled      = bool
+    name                 = string
+    subnet_id            = string
+    public_ip_address_id = string
   })
 ```
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description:   "Value for the location of the Bastion Host."
+
+  Example usage:  
+  location = "East US"
+
+Type: `string`
+
+### <a name="input_name"></a> [name](#input\_name)
+
+Description:   "Name of the Azure Bastion Host."
+
+  Example Usage:  
+  name = "myBastionHost"
+
+Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
@@ -140,6 +131,16 @@ Type: `string`
 ## Optional Inputs
 
 The following input variables are optional (have default values):
+
+### <a name="input_copy_paste_enabled"></a> [copy\_paste\_enabled](#input\_copy\_paste\_enabled)
+
+Description:   Enable or disable copy/paste through the Bastion session. Default is true.  
+  Example Usage:  
+  copy\_paste\_enabled = true
+
+Type: `bool`
+
+Default: `true`
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
@@ -198,23 +199,45 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_file_copy_enabled"></a> [file\_copy\_enabled](#input\_file\_copy\_enabled)
+
+Description:   Enable or disable file copy through the Bastion session. Default is true."  
+  Example Usage:  
+  file\_copy\_enabled = true
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_ip_connect_enabled"></a> [ip\_connect\_enabled](#input\_ip\_connect\_enabled)
+
+Description:   
+  Enable or disable IP connectivity through the Bastion Host. Default is true.
+
+  Example Usage:  
+  ip\_connect\_enabled = true
+
+Type: `bool`
+
+Default: `true`
+
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description:   The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.  
-  Example usage:  
-  name = "test-lock"  
-  kind = "ReadOnly"
+Description:   Controls the Resource Lock configuration for this resource. The following properties can be specified:
+
+  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
 
 Type:
 
 ```hcl
 object({
+    kind = string
     name = optional(string, null)
-    kind = optional(string, "None")
   })
 ```
 
-Default: `{}`
+Default: `null`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
@@ -251,6 +274,36 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_scale_units"></a> [scale\_units](#input\_scale\_units)
+
+Description:   The number of scale units for the Bastion Host. Default is 2."  
+  Example Usage:  
+  scale\_units = 2
+
+Type: `number`
+
+Default: `2`
+
+### <a name="input_shareable_link_enabled"></a> [shareable\_link\_enabled](#input\_shareable\_link\_enabled)
+
+Description:   Enable or disable shareable link feature on the Bastion Host."  
+  Example Usage:  
+  shareable\_link\_enabled = true
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_sku"></a> [sku](#input\_sku)
+
+Description:   "SKU for the Bastion Host, either Basic or Standard. Default is Standard."  
+  Example Usage:  
+  sku = "Standard"
+
+Type: `string`
+
+Default: `"Standard"`
+
 ### <a name="input_subnet_name"></a> [subnet\_name](#input\_subnet\_name)
 
 Description:   "The name of the subnet where Azure Bastion will be deployed. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail."
@@ -273,7 +326,17 @@ Description:   The tags to associate with your network and subnets.
 
 Type: `map(string)`
 
-Default: `{}`
+Default: `null`
+
+### <a name="input_tunneling_enabled"></a> [tunneling\_enabled](#input\_tunneling\_enabled)
+
+Description:   Enable or disable tunneling through the Bastion Host. Default is true."  
+  Example Usage:  
+  tunneling\_enabled = true
+
+Type: `bool`
+
+Default: `true`
 
 ## Outputs
 
