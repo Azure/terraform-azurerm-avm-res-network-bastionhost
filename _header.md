@@ -8,7 +8,7 @@ To use this module in your Terraform configuration, you'll need to provide value
 module "azure_bastion" {
   source = "./path_to_this_module"
 
-  
+
   enable_telemetry     = true
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.example.name
@@ -30,9 +30,10 @@ module "azure_bastion" {
     scale_units            = 2
     shareable_link_enabled = true
     tunneling_enabled      = true
-  
+
   }
-  ```
+}
+```
 
 
 # AVM Versioning Notice

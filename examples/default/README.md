@@ -20,8 +20,8 @@ DESCRIPTION
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  name     = "bastion-rg"
   location = "eastasia"
+  name     = "bastion-rg"
 }
 # Using the AVM module for virtual network
 module "virtualnetwork" {
@@ -42,12 +42,11 @@ module "virtualnetwork" {
 }
 
 resource "azurerm_public_ip" "example" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
   name                = "acceptanceTestPublicIp1"
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-  allocation_method   = "Static"
   sku                 = "Standard"
-
   tags = {
     environment = "Production"
   }
@@ -164,11 +163,11 @@ The following outputs are exported:
 
 ### <a name="output_bastion_host"></a> [bastion\_host](#output\_bastion\_host)
 
-Description: n/a
+Description: The name of the bastion host resource
 
 ### <a name="output_bastion_host_id"></a> [bastion\_host\_id](#output\_bastion\_host\_id)
 
-Description: n/a
+Description: The id of the bastion host resource
 
 ## Modules
 
@@ -194,5 +193,6 @@ The software may collect information about you and your use of the software and 
 ---
 
 ## AVM Versioning Notice
-Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/
+
+Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 <!-- END_TF_DOCS -->

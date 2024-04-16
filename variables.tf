@@ -1,50 +1,21 @@
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetryinfo.
-If it is set to false, then no telemetry will be collected.
-
-Example usage:
-enable_telemetry = false
-DESCRIPTION
-}
-
-# This is required for most resource modules
-variable "resource_group_name" {
-  description = <<DESCRIPTION
-  "The name of the resource group in which to create the Azure Bastion."
-  Example usage:
-  resource_group_name = "myResourceGroup"
-  DESCRIPTION
-  type        = string
-}
-variable "virtual_network_name" {
-  description = <<DESCRIPTION
-  "The name of the virtual network where Azure Bastion will be deployed."
-  Example usage:
-  virtual_network_name = "myVnet"
-  DESCRIPTION
-  type        = string
-}
-
-variable "subnet_name" {
-  description = <<DESCRIPTION
-  "The name of the subnet where Azure Bastion will be deployed. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail."
-
-  Example usage:
-subnet_name = "AzureBastionSubnet"
-  DESCRIPTION
-  type        = string
-  default     = "AzureBastionSubnet"
-  validation {
-    condition     = var.subnet_name == "AzureBastionSubnet"
-    error_message = "The subnet name must be AzureBastionSubnet."
-  }
-}
-
 variable "bastion_host" {
+  type = object({
+    name                = string
+    resource_group_name = string
+    location            = string
+    copy_paste_enabled  = bool
+    file_copy_enabled   = bool
+    sku                 = string
+    ip_configuration = object({
+      name                 = string
+      subnet_id            = string
+      public_ip_address_id = string
+    })
+    ip_connect_enabled     = bool
+    scale_units            = number
+    shareable_link_enabled = bool
+    tunneling_enabled      = bool
+  })
   description = <<DESCRIPTION
   "Configuration for Azure Bastion Host. The variable requires a subnet with the name ***AzureBastionSubnet***, else the deployment will fail"
 
@@ -70,28 +41,29 @@ variable "bastion_host" {
   ```
   DESCRIPTION
 
-  type = object({
-    name                = string
-    resource_group_name = string
-    location            = string
-    copy_paste_enabled  = bool
-    file_copy_enabled   = bool
-    sku                 = string
-    ip_configuration = object({
-      name                 = string
-      subnet_id            = string
-      public_ip_address_id = string
-    })
-    ip_connect_enabled     = bool
-    scale_units            = number
-    shareable_link_enabled = bool
-    tunneling_enabled      = bool
-  })
   validation {
     condition     = basename(var.bastion_host.ip_configuration.subnet_id) == "AzureBastionSubnet"
     error_message = "The subnet name must be AzureBastionSubnet."
   }
+}
 
+# This is required for most resource modules
+variable "resource_group_name" {
+  type        = string
+  description = <<DESCRIPTION
+  "The name of the resource group in which to create the Azure Bastion."
+  Example usage:
+  resource_group_name = "myResourceGroup"
+  DESCRIPTION
+}
+
+variable "virtual_network_name" {
+  type        = string
+  description = <<DESCRIPTION
+  "The name of the virtual network where Azure Bastion will be deployed."
+  Example usage:
+  virtual_network_name = "myVnet"
+  DESCRIPTION
 }
 
 # AVM Required Interfaces
@@ -109,22 +81,7 @@ variable "diagnostic_settings" {
     event_hub_name                           = optional(string, null)
     marketplace_partner_resource_id          = optional(string, null)
   }))
-  default  = {}
-  nullable = false
-
-  validation {
-    condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
-    error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
-  }
-  validation {
-    condition = alltrue(
-      [
-        for _, v in var.diagnostic_settings :
-        v.workspace_resource_id != null || v.storage_account_resource_id != null || v.event_hub_authorization_rule_resource_id != null || v.marketplace_partner_resource_id != null
-      ]
-    )
-    error_message = "At least one of `workspace_resource_id`, `storage_account_resource_id`, `marketplace_partner_resource_id`, or `event_hub_authorization_rule_resource_id`, must be set."
-  }
+  default     = {}
   description = <<DESCRIPTION
   A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
   - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
@@ -149,8 +106,56 @@ variable "diagnostic_settings" {
 }
 ```
   DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = alltrue([for _, v in var.diagnostic_settings : contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)])
+    error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
+  }
+  validation {
+    condition = alltrue(
+      [
+        for _, v in var.diagnostic_settings :
+        v.workspace_resource_id != null || v.storage_account_resource_id != null || v.event_hub_authorization_rule_resource_id != null || v.marketplace_partner_resource_id != null
+      ]
+    )
+    error_message = "At least one of `workspace_resource_id`, `storage_account_resource_id`, `marketplace_partner_resource_id`, or `event_hub_authorization_rule_resource_id`, must be set."
+  }
 }
 
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+This variable controls whether or not telemetry is enabled for the module.
+For more information see https://aka.ms/avm/telemetryinfo.
+If it is set to false, then no telemetry will be collected.
+
+Example usage:
+enable_telemetry = false
+DESCRIPTION
+}
+
+# Resource Locks
+variable "lock" {
+  type = object({
+    name = optional(string, null)
+    kind = optional(string, "None")
+  })
+  default     = {}
+  description = <<DESCRIPTION
+  The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+  Example usage:
+  name = "test-lock"
+  kind = "ReadOnly"
+DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
+    error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
+  }
+}
 
 # RBAC Assignment
 variable "role_assignments" {
@@ -184,31 +189,26 @@ variable "role_assignments" {
   DESCRIPTION
 }
 
-# Resource Locks
-variable "lock" {
-  type = object({
-    name = optional(string, null)
-    kind = optional(string, "None")
-  })
-  default  = {}
-  nullable = false
-  validation {
-    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
-    error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
-  }
+variable "subnet_name" {
+  type        = string
+  default     = "AzureBastionSubnet"
   description = <<DESCRIPTION
-  The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+  "The name of the subnet where Azure Bastion will be deployed. The variable requires a subnet with the name AzureBastionSubnet, else the deployment will fail."
+
   Example usage:
-  name = "test-lock"
-  kind = "ReadOnly"
-DESCRIPTION
+subnet_name = "AzureBastionSubnet"
+  DESCRIPTION
+
+  validation {
+    condition     = var.subnet_name == "AzureBastionSubnet"
+    error_message = "The subnet name must be AzureBastionSubnet."
+  }
 }
 
 # Tags
 variable "tags" {
   type        = map(string)
   default     = {}
-  nullable    = false
   description = <<DESCRIPTION
   The tags to associate with your network and subnets.
  Example usage:
@@ -217,4 +217,5 @@ variable "tags" {
   project = "myProject"
 }
 DESCRIPTION
+  nullable    = false
 }

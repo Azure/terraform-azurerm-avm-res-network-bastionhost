@@ -13,8 +13,8 @@ DESCRIPTION
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  name     = "bastion-rg"
   location = "eastasia"
+  name     = "bastion-rg"
 }
 # Using the AVM module for virtual network
 module "virtualnetwork" {
@@ -35,12 +35,11 @@ module "virtualnetwork" {
 }
 
 resource "azurerm_public_ip" "example" {
+  allocation_method   = "Static"
+  location            = azurerm_resource_group.this.location
   name                = "acceptanceTestPublicIp1"
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-  allocation_method   = "Static"
   sku                 = "Standard"
-
   tags = {
     environment = "Production"
   }
