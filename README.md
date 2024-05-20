@@ -2,6 +2,11 @@
 
 # Azure Verified Module for Azure Bastion
 
+⚠️THIS MODULE IS CURRENTLY ORPHANED.⚠️
+
+- Only security and bug fixes are being handled by the AVM core team at present.
+- If interested in becoming the module owner of this orphaned module (must be Microsoft FTE), please look for the related "orphaned module" GitHub issue [here](https://aka.ms/AVM/OrphanedModules)!
+
 This module provides a generic way to create and manage a Azure Bastion resource.
 
 To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
