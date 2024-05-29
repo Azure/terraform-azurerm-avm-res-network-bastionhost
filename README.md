@@ -291,6 +291,10 @@ Default: `false`
 
 The following outputs are exported:
 
+### <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name)
+
+Description: The FQDN of the Azure Bastion resource
+
 ### <a name="output_name"></a> [name](#output\_name)
 
 Description: The name of the Azure Bastion resource

@@ -1,3 +1,8 @@
+output "dns_name" {
+  description = "The FQDN of the Azure Bastion resource"
+  value       = azurerm_bastion_host.this.dns_name
+}
+
 output "name" {
   description = "The name of the Azure Bastion resource"
   value       = azurerm_bastion_host.this.name

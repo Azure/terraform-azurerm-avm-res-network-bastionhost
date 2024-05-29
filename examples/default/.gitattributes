@@ -1,1 +1,0 @@
-.terraform/providers/registry.terraform.io/hashicorp/azurerm/3.84.0/darwin_arm64/terraform-provider-azurerm_v3.84.0_x5 filter=lfs diff=lfs merge=lfs -text
