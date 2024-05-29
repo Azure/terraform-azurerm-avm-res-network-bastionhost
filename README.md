@@ -15,7 +15,7 @@ module "azure_bastion" {
   location            = "southeastasia"
   copy_paste_enabled  = true
   file_copy_enabled   = false
-  sku                 = "Basic"
+  sku                 = "Standard"
   ip_configuration = {
     name                 = "my-ipconfig"
     subnet_id            = "subnet_id_resource"
