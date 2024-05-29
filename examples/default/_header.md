@@ -1,4 +1,3 @@
+# Create an Azure Bastion Host with Standard SKU
 
-# Create a Azure Bastion Resource
-
-This deploys the module in its simplest form.
+This deploys a Standard SKU Bastion host.
