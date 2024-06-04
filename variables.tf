@@ -75,8 +75,16 @@ variable "shareable_link_enabled" {
 variable "sku" {
   type        = string
   default     = "Basic"
-  description = "The SKU of the Azure Bastion Host."
+  description = <<DESCRIPTION
+The SKU of the Azure Bastion Host.
+Valid values are 'Basic', 'Standard', and 'Developer'.
+DESCRIPTION
   nullable    = false
+
+  validation {
+    condition     = can(regex("^(Basic|Standard|Developer)$", var.sku))
+    error_message = "The SKU must be either 'Basic', 'Standard', or 'Developer'."
+  }
 }
 
 variable "tunneling_enabled" {
