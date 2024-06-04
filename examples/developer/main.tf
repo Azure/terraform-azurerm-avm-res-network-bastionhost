@@ -76,11 +76,7 @@ module "azure_bastion" {
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
   sku                 = "Developer"
-  ip_configuration = {
-    name                 = "my-ipconfig"
-    subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
-    public_ip_address_id = azurerm_public_ip.example.id
-  }
+  virtual_network_id  = module.virtualnetwork.resource_id
 
   tags = {
     environment = "production"

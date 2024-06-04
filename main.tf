@@ -11,11 +11,15 @@ resource "azurerm_bastion_host" "this" {
   sku                    = var.sku
   tags                   = var.tags
   tunneling_enabled      = var.tunneling_enabled
+  virtual_network_id     = var.virtual_network_id
 
-  ip_configuration {
-    name                 = var.ip_configuration.name
-    public_ip_address_id = var.ip_configuration.public_ip_address_id
-    subnet_id            = var.ip_configuration.subnet_id
+  dynamic "ip_configuration" {
+    for_each = var.ip_configuration != null ? [var.ip_configuration] : []
+    content {
+      name                 = ip_configuration.value.name
+      public_ip_address_id = ip_configuration.value.public_ip_address_id
+      subnet_id            = ip_configuration.value.subnet_id
+    }
   }
 }
 

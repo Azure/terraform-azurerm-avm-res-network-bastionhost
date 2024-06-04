@@ -68,24 +68,6 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
-
-Description: The IP configuration for the Azure Bastion Host.
-
-- `name` - The name of the IP configuration.
-- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
-- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
-
-Type:
-
-```hcl
-object({
-    name                 = string
-    subnet_id            = string
-    public_ip_address_id = string
-  })
-```
-
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: The location of the Azure Bastion Host.
@@ -180,6 +162,26 @@ Description: Specifies whether file copy functionality is enabled for the Azure 
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
+
+Description: The IP configuration for the Azure Bastion Host.
+
+- `name` - The name of the IP configuration.
+- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
+- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
+
+Type:
+
+```hcl
+object({
+    name                 = string
+    subnet_id            = string
+    public_ip_address_id = string
+  })
+```
+
+Default: `null`
 
 ### <a name="input_ip_connect_enabled"></a> [ip\_connect\_enabled](#input\_ip\_connect\_enabled)
 
@@ -286,6 +288,14 @@ Description: Specifies whether tunneling functionality is enabled for the Azure 
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id)
+
+Description: The ID of the virtual network where the Azure Bastion Host is deployed.
+
+Type: `string`
+
+Default: `null`
 
 ## Outputs
 

@@ -1,19 +1,3 @@
-variable "ip_configuration" {
-  type = object({
-    name                 = string
-    subnet_id            = string
-    public_ip_address_id = string
-  })
-  description = <<DESCRIPTION
-The IP configuration for the Azure Bastion Host.
-
-- `name` - The name of the IP configuration.
-- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
-- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
-DESCRIPTION
-  nullable    = false
-}
-
 variable "location" {
   type        = string
   description = "The location of the Azure Bastion Host."
@@ -42,6 +26,22 @@ variable "file_copy_enabled" {
   default     = false
   description = "Specifies whether file copy functionality is enabled for the Azure Bastion Host."
   nullable    = false
+}
+
+variable "ip_configuration" {
+  type = object({
+    name                 = string
+    subnet_id            = string
+    public_ip_address_id = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+The IP configuration for the Azure Bastion Host.
+
+- `name` - The name of the IP configuration.
+- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
+- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
+DESCRIPTION
 }
 
 variable "ip_connect_enabled" {
@@ -84,4 +84,10 @@ variable "tunneling_enabled" {
   default     = false
   description = "Specifies whether tunneling functionality is enabled for the Azure Bastion Host."
   nullable    = false
+}
+
+variable "virtual_network_id" {
+  type        = string
+  default     = null
+  description = "The ID of the virtual network where the Azure Bastion Host is deployed."
 }
