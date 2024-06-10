@@ -3,33 +3,47 @@
 
 This module provides a generic way to create and manage a Azure Bastion resource.
 
-To use this module in your Terraform configuration, you'll need to provide values for the required variables. Here's a basic example:
+To use this module in your Terraform configuration, you'll need to provide values for the required variables.
+
+## Features
+
+The module support the `Developer`, `Basic` and `Standard` SKU's for Azure Bastion.
+
+> NOTE: The `Premium` SKU is not currently supported by this module, but will be added in a future release.
+
+## Example Usage
+
+Here is an example of how you can use this module in your Terraform configuration:
 
 ```terraform
 module "azure_bastion" {
-  source = "./path_to_this_module"
+  source = "Azure/avm-res-network-bastionhost/azurerm"
 
   enable_telemetry    = true
-  name                = "my-bastion"
+  name                = module.naming.bastion_host.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location            = "southeastasia"
+  location            = azurerm_resource_group.this.location
   copy_paste_enabled  = true
   file_copy_enabled   = false
   sku                 = "Standard"
   ip_configuration = {
     name                 = "my-ipconfig"
-    subnet_id            = "subnet_id_resource"
+    subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
     public_ip_address_id = azurerm_public_ip.example.id
   }
   ip_connect_enabled     = true
-  scale_units            = 2
+  scale_units            = 4
   shareable_link_enabled = true
   tunneling_enabled      = true
+  kerberos_enabled       = true
 
+  tags = {
+    environment = "production"
+  }
 }
 ```
 
-# AVM Versioning Notice
+## AVM Versioning Notice
 
 Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 
@@ -67,24 +81,6 @@ The following resources are used by this module:
 ## Required Inputs
 
 The following input variables are required:
-
-### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
-
-Description: The IP configuration for the Azure Bastion Host.
-
-- `name` - The name of the IP configuration.
-- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
-- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
-
-Type:
-
-```hcl
-object({
-    name                 = string
-    subnet_id            = string
-    public_ip_address_id = string
-  })
-```
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -181,6 +177,26 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
+
+Description: The IP configuration for the Azure Bastion Host.
+
+- `name` - The name of the IP configuration.
+- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
+- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
+
+Type:
+
+```hcl
+object({
+    name                 = string
+    subnet_id            = string
+    public_ip_address_id = string
+  })
+```
+
+Default: `null`
+
 ### <a name="input_ip_connect_enabled"></a> [ip\_connect\_enabled](#input\_ip\_connect\_enabled)
 
 Description: Specifies whether IP connect functionality is enabled for the Azure Bastion Host.
@@ -265,7 +281,8 @@ Default: `false`
 
 ### <a name="input_sku"></a> [sku](#input\_sku)
 
-Description: The SKU of the Azure Bastion Host.
+Description: The SKU of the Azure Bastion Host.  
+Valid values are 'Basic', 'Standard', and 'Developer'.
 
 Type: `string`
 
@@ -286,6 +303,14 @@ Description: Specifies whether tunneling functionality is enabled for the Azure 
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id)
+
+Description: The ID of the virtual network where the Azure Bastion Host is deployed.
+
+Type: `string`
+
+Default: `null`
 
 ## Outputs
 
