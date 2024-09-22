@@ -15,6 +15,7 @@ resource "azurerm_bastion_host" "this" {
 
   dynamic "ip_configuration" {
     for_each = var.ip_configuration != null ? [var.ip_configuration] : []
+
     content {
       name                 = ip_configuration.value.name
       public_ip_address_id = ip_configuration.value.public_ip_address_id
@@ -46,18 +47,21 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
 
   dynamic "enabled_log" {
     for_each = each.value.log_categories
+
     content {
       category = enabled_log.value
     }
   }
   dynamic "enabled_log" {
     for_each = each.value.log_groups
+
     content {
       category_group = enabled_log.value
     }
   }
   dynamic "metric" {
     for_each = each.value.metric_categories
+
     content {
       category = metric.value
     }
