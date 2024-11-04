@@ -1,4 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
+
 # Azure Verified Module for Azure Bastion
 
 This module provides a generic way to create and manage a Azure Bastion resource.
@@ -48,23 +49,24 @@ module "azure_bastion" {
 Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 
 <!-- markdownlint-disable MD033 -->
+
 ## Requirements
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement_terraform) (>= 1.5.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.105)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement_azurerm) (< 5.0)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
+- <a name="requirement_random"></a> [random](#requirement_random) (~> 3.5)
 
 ## Providers
 
 The following providers are used by this module:
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.105)
+- <a name="provider_azurerm"></a> [azurerm](#provider_azurerm) (< 5.0)
 
-- <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
+- <a name="provider_random"></a> [random](#provider_random) (~> 3.5)
 
 ## Resources
 
@@ -78,23 +80,24 @@ The following resources are used by this module:
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 
 <!-- markdownlint-disable MD013 -->
+
 ## Required Inputs
 
 The following input variables are required:
 
-### <a name="input_location"></a> [location](#input\_location)
+### <a name="input_location"></a> [location](#input_location)
 
 Description: The location of the Azure Bastion Host.
 
 Type: `string`
 
-### <a name="input_name"></a> [name](#input\_name)
+### <a name="input_name"></a> [name](#input_name)
 
 Description: The name of the Azure Bastion Host.
 
 Type: `string`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+### <a name="input_resource_group_name"></a> [resource_group_name](#input_resource_group_name)
 
 Description: The name of the resource group where the Azure Bastion Host is located.
 
@@ -104,7 +107,7 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_copy_paste_enabled"></a> [copy\_paste\_enabled](#input\_copy\_paste\_enabled)
+### <a name="input_copy_paste_enabled"></a> [copy_paste_enabled](#input_copy_paste_enabled)
 
 Description: Specifies whether copy-paste functionality is enabled for the Azure Bastion Host.
 
@@ -112,9 +115,10 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
+### <a name="input_diagnostic_settings"></a> [diagnostic_settings](#input_diagnostic_settings)
 
 Description: A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
 - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
 - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
 - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
@@ -127,6 +131,7 @@ Description: A map of diagnostic settings to create on the Key Vault. The map ke
 - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
 
 Example usage:
+
 ```hcl
 
 diagnostic_settings = {
@@ -156,20 +161,20 @@ map(object({
 
 Default: `{}`
 
-### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+### <a name="input_enable_telemetry"></a> [enable_telemetry](#input_enable_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
 For more information see https://aka.ms/avm/telemetryinfo.  
 If it is set to false, then no telemetry will be collected.
 
 Example usage:  
-enable\_telemetry = false
+enable_telemetry = false
 
 Type: `bool`
 
 Default: `true`
 
-### <a name="input_file_copy_enabled"></a> [file\_copy\_enabled](#input\_file\_copy\_enabled)
+### <a name="input_file_copy_enabled"></a> [file_copy_enabled](#input_file_copy_enabled)
 
 Description: Specifies whether file copy functionality is enabled for the Azure Bastion Host.
 
@@ -177,7 +182,7 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
+### <a name="input_ip_configuration"></a> [ip_configuration](#input_ip_configuration)
 
 Description: The IP configuration for the Azure Bastion Host.
 
@@ -197,7 +202,7 @@ object({
 
 Default: `null`
 
-### <a name="input_ip_connect_enabled"></a> [ip\_connect\_enabled](#input\_ip\_connect\_enabled)
+### <a name="input_ip_connect_enabled"></a> [ip_connect_enabled](#input_ip_connect_enabled)
 
 Description: Specifies whether IP connect functionality is enabled for the Azure Bastion Host.
 
@@ -205,7 +210,7 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_kerberos_enabled"></a> [kerberos\_enabled](#input\_kerberos\_enabled)
+### <a name="input_kerberos_enabled"></a> [kerberos_enabled](#input_kerberos_enabled)
 
 Description: Specifies whether Kerberos authentication is enabled for the Azure Bastion Host.
 
@@ -213,7 +218,7 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_lock"></a> [lock](#input\_lock)
+### <a name="input_lock"></a> [lock](#input_lock)
 
 Description: Controls the Resource Lock configuration for this resource. The following properties can be specified:
 
@@ -231,7 +236,7 @@ object({
 
 Default: `null`
 
-### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
+### <a name="input_role_assignments"></a> [role_assignments](#input_role_assignments)
 
 Description: A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
@@ -263,7 +268,7 @@ map(object({
 
 Default: `{}`
 
-### <a name="input_scale_units"></a> [scale\_units](#input\_scale\_units)
+### <a name="input_scale_units"></a> [scale_units](#input_scale_units)
 
 Description: The number of scale units for the Azure Bastion Host.
 
@@ -271,7 +276,7 @@ Type: `number`
 
 Default: `2`
 
-### <a name="input_shareable_link_enabled"></a> [shareable\_link\_enabled](#input\_shareable\_link\_enabled)
+### <a name="input_shareable_link_enabled"></a> [shareable_link_enabled](#input_shareable_link_enabled)
 
 Description: Specifies whether shareable link functionality is enabled for the Azure Bastion Host.
 
@@ -279,7 +284,7 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_sku"></a> [sku](#input\_sku)
+### <a name="input_sku"></a> [sku](#input_sku)
 
 Description: The SKU of the Azure Bastion Host.  
 Valid values are 'Basic', 'Standard', and 'Developer'.
@@ -288,7 +293,7 @@ Type: `string`
 
 Default: `"Basic"`
 
-### <a name="input_tags"></a> [tags](#input\_tags)
+### <a name="input_tags"></a> [tags](#input_tags)
 
 Description: (Optional) Tags of the resource.
 
@@ -296,7 +301,7 @@ Type: `map(string)`
 
 Default: `null`
 
-### <a name="input_tunneling_enabled"></a> [tunneling\_enabled](#input\_tunneling\_enabled)
+### <a name="input_tunneling_enabled"></a> [tunneling_enabled](#input_tunneling_enabled)
 
 Description: Specifies whether tunneling functionality is enabled for the Azure Bastion Host.
 
@@ -304,7 +309,7 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id)
+### <a name="input_virtual_network_id"></a> [virtual_network_id](#input_virtual_network_id)
 
 Description: The ID of the virtual network where the Azure Bastion Host is deployed.
 
@@ -316,19 +321,19 @@ Default: `null`
 
 The following outputs are exported:
 
-### <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name)
+### <a name="output_dns_name"></a> [dns_name](#output_dns_name)
 
 Description: The FQDN of the Azure Bastion resource
 
-### <a name="output_name"></a> [name](#output\_name)
+### <a name="output_name"></a> [name](#output_name)
 
 Description: The name of the Azure Bastion resource
 
-### <a name="output_resource"></a> [resource](#output\_resource)
+### <a name="output_resource"></a> [resource](#output_resource)
 
 Description: The Azure Bastion resource
 
-### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+### <a name="output_resource_id"></a> [resource_id](#output_resource_id)
 
 Description: The ID of the Azure Bastion resource
 
@@ -337,7 +342,9 @@ Description: The ID of the Azure Bastion resource
 No modules.
 
 <!-- markdownlint-disable-next-line MD041 -->
+
 ## Data Collection
 
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+
 <!-- END_TF_DOCS -->
