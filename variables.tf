@@ -70,6 +70,11 @@ variable "session_recording_enabled" {
   default     = false
   description = "Specifies whether session recording functionality is enabled for the Azure Bastion Host."
   nullable    = false
+
+  validation {
+    condition     = var.session_recording_enabled == true ? var.sku == "Premium" : true
+    error_message = "Session recording functionality is only availble for Premium SKU."
+  }
 }
 
 variable "shareable_link_enabled" {
@@ -84,13 +89,13 @@ variable "sku" {
   default     = "Basic"
   description = <<DESCRIPTION
 The SKU of the Azure Bastion Host.
-Valid values are 'Basic', 'Standard', and 'Developer'.
+Valid values are 'Basic', 'Standard', 'Developer' or 'Premium'.
 DESCRIPTION
   nullable    = false
 
   validation {
-    condition     = can(regex("^(Basic|Standard|Developer)$", var.sku))
-    error_message = "The SKU must be either 'Basic', 'Standard', or 'Developer'."
+    condition     = can(regex("^(Basic|Standard|Developer|Premium)$", var.sku))
+    error_message = "The SKU must be either 'Basic', 'Standard', 'Developer', or 'Premium'."
   }
 }
 
@@ -99,6 +104,11 @@ variable "tunneling_enabled" {
   default     = false
   description = "Specifies whether tunneling functionality is enabled for the Azure Bastion Host."
   nullable    = false
+
+  validation {
+    condition     = var.session_recording_enabled == true && var.tunneling_enabled == true ? false : true
+    error_message = "Tunneling functionality is not compatible with session recording functionality."
+  }
 }
 
 variable "virtual_network_id" {

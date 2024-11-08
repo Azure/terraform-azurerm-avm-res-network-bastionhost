@@ -86,7 +86,7 @@ module "azure_bastion" {
   ip_connect_enabled        = true
   scale_units               = 4
   shareable_link_enabled    = true
-  tunneling_enabled         = true
+  tunneling_enabled         = false
   kerberos_enabled          = true
   session_recording_enabled = true
 

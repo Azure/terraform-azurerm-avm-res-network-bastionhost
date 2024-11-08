@@ -54,10 +54,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.105, < 5.0)
-
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.105, < 5.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -289,7 +286,7 @@ Default: `false`
 ### <a name="input_sku"></a> [sku](#input\_sku)
 
 Description: The SKU of the Azure Bastion Host.  
-Valid values are 'Basic', 'Standard', and 'Developer'.
+Valid values are 'Basic', 'Standard', 'Developer' or 'Premium'.
 
 Type: `string`
 

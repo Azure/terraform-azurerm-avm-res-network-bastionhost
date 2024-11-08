@@ -1,5 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
-# Create an Azure Bastion Host with Premium SKU using azurerm v4.x
+# Create an Azure Bastion Host with Premium SKU
 
 This deploys a Standard SKU Bastion host.
 
@@ -92,7 +92,7 @@ module "azure_bastion" {
   ip_connect_enabled        = true
   scale_units               = 4
   shareable_link_enabled    = true
-  tunneling_enabled         = true
+  tunneling_enabled         = false
   kerberos_enabled          = true
   session_recording_enabled = true
 

@@ -1,5 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
-# Create an Azure Bastion Host with Standard SKU using azurerm v4.x
+# Create an Azure Bastion Host with Standard SKU
 
 This deploys a Standard SKU Bastion host.
 
