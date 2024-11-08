@@ -270,6 +270,14 @@ Type: `number`
 
 Default: `2`
 
+### <a name="input_session_recording_enabled"></a> [session\_recording\_enabled](#input\_session\_recording\_enabled)
+
+Description: Specifies whether session recording functionality is enabled for the Azure Bastion Host.
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_shareable_link_enabled"></a> [shareable\_link\_enabled](#input\_shareable\_link\_enabled)
 
 Description: Specifies whether shareable link functionality is enabled for the Azure Bastion Host.

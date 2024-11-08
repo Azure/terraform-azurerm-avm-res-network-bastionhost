@@ -65,6 +65,13 @@ variable "scale_units" {
   nullable    = false
 }
 
+variable "session_recording_enabled" {
+  type        = bool
+  default     = false
+  description = "Specifies whether session recording functionality is enabled for the Azure Bastion Host."
+  nullable    = false
+}
+
 variable "shareable_link_enabled" {
   type        = bool
   default     = false
