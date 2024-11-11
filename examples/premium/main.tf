@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.106"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -76,18 +76,19 @@ module "azure_bastion" {
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
   copy_paste_enabled  = true
-  file_copy_enabled   = false
-  sku                 = "Standard"
+  file_copy_enabled   = true
+  sku                 = "Premium"
   ip_configuration = {
     name                 = "my-ipconfig"
     subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
     public_ip_address_id = azurerm_public_ip.example.id
   }
-  ip_connect_enabled     = true
-  scale_units            = 4
-  shareable_link_enabled = true
-  tunneling_enabled      = true
-  kerberos_enabled       = true
+  ip_connect_enabled        = true
+  scale_units               = 4
+  shareable_link_enabled    = true
+  tunneling_enabled         = false
+  kerberos_enabled          = true
+  session_recording_enabled = true
 
   tags = {
     environment = "production"
