@@ -72,6 +72,7 @@ resource "azurerm_public_ip" "example" {
   tags = {
     environment = "Production"
   }
+  zones = [1, 2, 3]
 }
 
 module "azure_bastion" {

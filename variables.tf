@@ -1,3 +1,17 @@
+variable "ip_configuration" {
+  type = object({
+    name                 = optional(string)
+    subnet_id            = string
+    public_ip_address_id = optional(string, null)
+  })
+  description = <<DESCRIPTION
+The IP configuration for the Azure Bastion Host.
+- `name` - The name of the IP configuration.
+- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
+- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
+DESCRIPTION
+}
+
 variable "location" {
   type        = string
   description = "The location of the Azure Bastion Host."
@@ -28,22 +42,6 @@ variable "file_copy_enabled" {
   nullable    = false
 }
 
-variable "ip_configuration" {
-  type = object({
-    name                 = string
-    subnet_id            = string
-    public_ip_address_id = string
-  })
-  default     = null
-  description = <<DESCRIPTION
-The IP configuration for the Azure Bastion Host.
-
-- `name` - The name of the IP configuration.
-- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
-- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
-DESCRIPTION
-}
-
 variable "ip_connect_enabled" {
   type        = bool
   default     = false
@@ -56,6 +54,18 @@ variable "kerberos_enabled" {
   default     = false
   description = "Specifies whether Kerberos authentication is enabled for the Azure Bastion Host."
   nullable    = false
+}
+
+variable "private_only" {
+  type        = bool
+  default     = false
+  description = "Specifies whether the Azure Bastion Host is configured to be private only."
+  nullable    = false
+
+  validation {
+    condition     = (var.private_only == true && var.sku == "Premium") || var.private_only == false
+    error_message = "Private only functionality is only available for Premium SKU."
+  }
 }
 
 variable "scale_units" {
@@ -115,4 +125,15 @@ variable "virtual_network_id" {
   type        = string
   default     = null
   description = "The ID of the virtual network where the Azure Bastion Host is deployed."
+}
+
+variable "zones" {
+  type        = list(number)
+  default     = [1, 2, 3]
+  description = "The availability zones where the Azure Bastion Host is deployed."
+
+  validation {
+    condition     = (length(var.zones) > 1 && var.sku == "Developer") || length(var.zones) >= 0 && var.sku != "Developer"
+    error_message = "The Developer SKU does not support availability zones."
+  }
 }

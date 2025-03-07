@@ -13,14 +13,18 @@ resource "azurerm_bastion_host" "this" {
   tags                      = var.tags
   tunneling_enabled         = var.tunneling_enabled
   virtual_network_id        = var.virtual_network_id
+  zones                     = var.zones
 
-  dynamic "ip_configuration" {
-    for_each = var.ip_configuration != null ? [var.ip_configuration] : []
+  ip_configuration {
+    name                 = coalesce(var.ip_configuration.name, "ipconfig-${var.name}")
+    public_ip_address_id = local.public_ip_resource_id
+    subnet_id            = var.ip_configuration.subnet_id
+  }
 
-    content {
-      name                 = ip_configuration.value.name
-      public_ip_address_id = ip_configuration.value.public_ip_address_id
-      subnet_id            = ip_configuration.value.subnet_id
+  lifecycle {
+    precondition {
+      condition     = length(local.public_ip_zone_config) == length(var.zones)
+      error_message = "The number of zones in the public IP address must match the number of zones in the Azure Bastion Host."
     }
   }
 }
@@ -67,6 +71,27 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
       category = metric.value
     }
   }
+}
+
+
+module "public_ip_address" {
+  count               = var.sku != "Developer" && var.private_only == false ? 1 : 0
+  source              = "Azure/avm-res-network-publicipaddress/azurerm"
+  version             = "0.2.0"
+  enable_telemetry    = var.enable_telemetry
+  resource_group_name = var.resource_group_name
+  name                = "pip-${var.name}"
+  location            = var.location
+  sku                 = "Standard"
+  zones               = var.zones
+  #tags = var.tags
+}
+
+data "azurerm_public_ip" "this" {
+  count = var.ip_configuration.public_ip_address_id != null ? 1 : 0
+
+  name                = (provider::azurerm::parse_resource_id(var.ip_configuration.public_ip_address_id))["resource_name"]
+  resource_group_name = (provider::azurerm::parse_resource_id(var.ip_configuration.public_ip_address_id))["resource_group"]
 }
 
 resource "azurerm_role_assignment" "this" {

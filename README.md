@@ -54,7 +54,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -71,12 +71,30 @@ The following resources are used by this module:
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azurerm_public_ip.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/public_ip) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
 The following input variables are required:
+
+### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
+
+Description: The IP configuration for the Azure Bastion Host.
+- `name` - The name of the IP configuration.
+- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
+- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
+
+Type:
+
+```hcl
+object({
+    name                 = optional(string)
+    subnet_id            = string
+    public_ip_address_id = optional(string, null)
+  })
+```
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -173,26 +191,6 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
-
-Description: The IP configuration for the Azure Bastion Host.
-
-- `name` - The name of the IP configuration.
-- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
-- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
-
-Type:
-
-```hcl
-object({
-    name                 = string
-    subnet_id            = string
-    public_ip_address_id = string
-  })
-```
-
-Default: `null`
-
 ### <a name="input_ip_connect_enabled"></a> [ip\_connect\_enabled](#input\_ip\_connect\_enabled)
 
 Description: Specifies whether IP connect functionality is enabled for the Azure Bastion Host.
@@ -226,6 +224,14 @@ object({
 ```
 
 Default: `null`
+
+### <a name="input_private_only"></a> [private\_only](#input\_private\_only)
+
+Description: Specifies whether the Azure Bastion Host is configured to be private only.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
@@ -316,6 +322,22 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_zones"></a> [zones](#input\_zones)
+
+Description: The availability zones where the Azure Bastion Host is deployed.
+
+Type: `list(number)`
+
+Default:
+
+```json
+[
+  1,
+  2,
+  3
+]
+```
+
 ## Outputs
 
 The following outputs are exported:
@@ -338,7 +360,13 @@ Description: The ID of the Azure Bastion resource
 
 ## Modules
 
-No modules.
+The following Modules are called:
+
+### <a name="module_public_ip_address"></a> [public\_ip\_address](#module\_public\_ip\_address)
+
+Source: Azure/avm-res-network-publicipaddress/azurerm
+
+Version: 0.2.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
