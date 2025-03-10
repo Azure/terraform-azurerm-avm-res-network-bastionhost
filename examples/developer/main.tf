@@ -57,18 +57,6 @@ module "virtualnetwork" {
   }
 }
 
-resource "azurerm_public_ip" "example" {
-  allocation_method   = "Static"
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.public_ip.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Standard"
-  tags = {
-    environment = "Production"
-  }
-  zones = [1, 2, 3]
-}
-
 module "azure_bastion" {
   source = "../../"
 

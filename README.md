@@ -79,26 +79,9 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
-
-Description: The IP configuration for the Azure Bastion Host.
-- `name` - The name of the IP configuration.
-- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
-- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
-
-Type:
-
-```hcl
-object({
-    name                 = optional(string)
-    subnet_id            = string
-    public_ip_address_id = optional(string, null)
-  })
-```
-
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description: The location of the Azure Bastion Host.
+Description: The location of the Azure Bastion Host and related resources.
 
 Type: `string`
 
@@ -110,7 +93,7 @@ Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description: The name of the resource group where the Azure Bastion Host is located.
+Description: The name of the resource group where the Azure Bastion Host will be deployed.
 
 Type: `string`
 
@@ -190,6 +173,27 @@ Description: Specifies whether file copy functionality is enabled for the Azure 
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
+
+Description: The IP configuration for the Azure Bastion Host.
+- `name` - The name of the IP configuration.
+- `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
+- `create_public_ip` - Specifies whether a public IP address should be created by the module. if both `create_public_ip` and `public_ip_address_id` are set, the `public_ip_address_id` will be ignored.
+- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
+
+Type:
+
+```hcl
+object({
+    name                 = optional(string)
+    subnet_id            = string
+    create_public_ip     = optional(bool, false)
+    public_ip_address_id = optional(string, null)
+  })
+```
+
+Default: `null`
 
 ### <a name="input_ip_connect_enabled"></a> [ip\_connect\_enabled](#input\_ip\_connect\_enabled)
 
@@ -316,7 +320,7 @@ Default: `false`
 
 ### <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id)
 
-Description: The ID of the virtual network where the Azure Bastion Host is deployed.
+Description: The ID of the virtual the Developer SKU Bastion hosts is attached to. Required for the Developer SKU Only.
 
 Type: `string`
 

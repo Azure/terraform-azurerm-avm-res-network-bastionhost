@@ -63,18 +63,6 @@ module "virtualnetwork" {
   }
 }
 
-resource "azurerm_public_ip" "example" {
-  allocation_method   = "Static"
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.public_ip.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Standard"
-  tags = {
-    environment = "Production"
-  }
-  zones = [1, 2, 3]
-}
-
 module "azure_bastion" {
   source = "../../"
 
@@ -106,7 +94,6 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_public_ip.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 

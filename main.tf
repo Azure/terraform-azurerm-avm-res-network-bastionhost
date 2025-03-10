@@ -15,10 +15,14 @@ resource "azurerm_bastion_host" "this" {
   virtual_network_id        = var.virtual_network_id
   zones                     = var.zones
 
-  ip_configuration {
-    name                 = coalesce(var.ip_configuration.name, "ipconfig-${var.name}")
-    public_ip_address_id = local.public_ip_resource_id
-    subnet_id            = var.ip_configuration.subnet_id
+  dynamic "ip_configuration" {
+    for_each = var.ip_configuration != null ? [var.ip_configuration] : []
+
+    content {
+      name                 = coalesce(var.ip_configuration.name, "ipconfig-${var.name}")
+      public_ip_address_id = local.public_ip_resource_id
+      subnet_id            = var.ip_configuration.subnet_id
+    }
   }
 
   lifecycle {
@@ -73,9 +77,9 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
   }
 }
 
-
+# TODO: Add lock and role assignment configuration for public ip address
 module "public_ip_address" {
-  count               = var.sku != "Developer" && var.private_only == false ? 1 : 0
+  count               = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == true ? 1 : 0) : 1
   source              = "Azure/avm-res-network-publicipaddress/azurerm"
   version             = "0.2.0"
   enable_telemetry    = var.enable_telemetry
@@ -84,14 +88,13 @@ module "public_ip_address" {
   location            = var.location
   sku                 = "Standard"
   zones               = var.zones
-  #tags = var.tags
 }
 
 data "azurerm_public_ip" "this" {
-  count = var.ip_configuration.public_ip_address_id != null ? 1 : 0
+  count = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == false ? 1 : 0) : 0
 
-  name                = (provider::azurerm::parse_resource_id(var.ip_configuration.public_ip_address_id))["resource_name"]
-  resource_group_name = (provider::azurerm::parse_resource_id(var.ip_configuration.public_ip_address_id))["resource_group"]
+  name                = split("/", var.ip_configuration.public_ip_address_id)[length(split("/", var.ip_configuration.public_ip_address_id)) - 1]
+  resource_group_name = split("/", var.ip_configuration.public_ip_address_id)[4]
 }
 
 resource "azurerm_role_assignment" "this" {
