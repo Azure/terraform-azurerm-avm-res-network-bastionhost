@@ -65,8 +65,10 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azurerm_bastion_host.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host) (resource)
+- [azurerm_management_lock.pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
+- [azurerm_role_assignment.pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
@@ -188,7 +190,7 @@ Type:
 object({
     name                 = optional(string)
     subnet_id            = string
-    create_public_ip     = optional(bool, false)
+    create_public_ip     = optional(bool, true)
     public_ip_address_id = optional(string, null)
   })
 ```
@@ -228,14 +230,6 @@ object({
 ```
 
 Default: `null`
-
-### <a name="input_private_only"></a> [private\_only](#input\_private\_only)
-
-Description: Specifies whether the Azure Bastion Host is configured to be private only.
-
-Type: `bool`
-
-Default: `false`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 

@@ -1,3 +1,16 @@
+# The private only option for this module will be available in a future release.
+# variable "private_only" {
+#   type        = bool
+#   default     = false
+#   description = "Specifies whether the Azure Bastion Host is configured to be private only."
+#   nullable    = false
+
+#   validation {
+#     condition     = (var.private_only == true && var.sku == "Premium") || var.private_only == false
+#     error_message = "Private only functionality is only available for Premium SKU."
+#   }
+# }
+
 variable "location" {
   type        = string
   description = "The location of the Azure Bastion Host and related resources."
@@ -32,7 +45,7 @@ variable "ip_configuration" {
   type = object({
     name                 = optional(string)
     subnet_id            = string
-    create_public_ip     = optional(bool, false)
+    create_public_ip     = optional(bool, true)
     public_ip_address_id = optional(string, null)
   })
   default     = null
@@ -62,18 +75,6 @@ variable "kerberos_enabled" {
   default     = false
   description = "Specifies whether Kerberos authentication is enabled for the Azure Bastion Host."
   nullable    = false
-}
-
-variable "private_only" {
-  type        = bool
-  default     = false
-  description = "Specifies whether the Azure Bastion Host is configured to be private only."
-  nullable    = false
-
-  validation {
-    condition     = (var.private_only == true && var.sku == "Premium") || var.private_only == false
-    error_message = "Private only functionality is only available for Premium SKU."
-  }
 }
 
 variable "scale_units" {

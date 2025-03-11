@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Create an Azure Bastion Host with Premium SKU
+# Create a Azure Bastion Host with Developer SKU
 
-This deploys a Standard SKU Bastion host.
+This deploys a Developer SKU Bastion host.
 
 ```hcl
 terraform {
@@ -9,7 +9,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 4.10"
     }
     random = {
       source  = "hashicorp/random"
@@ -63,39 +63,18 @@ module "virtualnetwork" {
   }
 }
 
-resource "azurerm_public_ip" "example" {
-  allocation_method   = "Static"
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.public_ip.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Standard"
-  tags = {
-    environment = "Production"
-  }
-  zones = [1, 2, 3]
-}
-
 module "azure_bastion" {
   source = "../../"
+  #source  = "Azure/avm-res-network-bastionhost/azurerm"
+
 
   enable_telemetry    = true
   name                = module.naming.bastion_host.name_unique
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
-  copy_paste_enabled  = true
-  file_copy_enabled   = true
-  sku                 = "Premium"
-  ip_configuration = {
-    name                 = "my-ipconfig"
-    subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
-    public_ip_address_id = azurerm_public_ip.example.id
-  }
-  ip_connect_enabled        = true
-  scale_units               = 4
-  shareable_link_enabled    = true
-  tunneling_enabled         = false
-  kerberos_enabled          = true
-  session_recording_enabled = true
+  sku                 = "Developer"
+  virtual_network_id  = module.virtualnetwork.resource_id
+  zones               = []
 
   tags = {
     environment = "production"
@@ -110,7 +89,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -118,7 +97,6 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_public_ip.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
