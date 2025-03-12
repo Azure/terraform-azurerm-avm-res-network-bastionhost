@@ -54,7 +54,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.5.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -65,12 +65,15 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azurerm_bastion_host.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host) (resource)
+- [azurerm_management_lock.pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
+- [azurerm_role_assignment.pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azurerm_public_ip.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/public_ip) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -80,7 +83,7 @@ The following input variables are required:
 
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description: The location of the Azure Bastion Host.
+Description: The location of the Azure Bastion Host and related resources.
 
 Type: `string`
 
@@ -92,7 +95,7 @@ Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description: The name of the resource group where the Azure Bastion Host is located.
+Description: The name of the resource group where the Azure Bastion Host will be deployed.
 
 Type: `string`
 
@@ -176,18 +179,19 @@ Default: `false`
 ### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
 
 Description: The IP configuration for the Azure Bastion Host.
-
 - `name` - The name of the IP configuration.
 - `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
+- `create_public_ip` - Specifies whether a public IP address should be created by the module. if both `create_public_ip` and `public_ip_address_id` are set, the `public_ip_address_id` will be ignored.
 - `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
 
 Type:
 
 ```hcl
 object({
-    name                 = string
+    name                 = optional(string)
     subnet_id            = string
-    public_ip_address_id = string
+    create_public_ip     = optional(bool, true)
+    public_ip_address_id = optional(string, null)
   })
 ```
 
@@ -310,11 +314,27 @@ Default: `false`
 
 ### <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id)
 
-Description: The ID of the virtual network where the Azure Bastion Host is deployed.
+Description: The ID of the virtual the Developer SKU Bastion hosts is attached to. Required for the Developer SKU Only.
 
 Type: `string`
 
 Default: `null`
+
+### <a name="input_zones"></a> [zones](#input\_zones)
+
+Description: The availability zones where the Azure Bastion Host is deployed.
+
+Type: `set(string)`
+
+Default:
+
+```json
+[
+  1,
+  2,
+  3
+]
+```
 
 ## Outputs
 
@@ -338,7 +358,13 @@ Description: The ID of the Azure Bastion resource
 
 ## Modules
 
-No modules.
+The following Modules are called:
+
+### <a name="module_public_ip_address"></a> [public\_ip\_address](#module\_public\_ip\_address)
+
+Source: Azure/avm-res-network-publicipaddress/azurerm
+
+Version: 0.2.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

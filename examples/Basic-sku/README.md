@@ -9,7 +9,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 4.10"
     }
     random = {
       source  = "hashicorp/random"
@@ -22,16 +22,23 @@ provider "azurerm" {
   features {}
 }
 
-## Section to provide a random Azure region for the resource group
+## Section to provide a random Azure region for the resource group. The bellow regions currently support Zone Redundant Bastion.
 # This allows us to randomize the region for the resource group.
-module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+locals {
+  regions = [
+    "Canada Central", "North Europe", "Qatar Central", "South Africa North", "Australia East",
+    "Central US", "Sweden Central", "Israel Central", "Korea Central",
+    "East US", "UK South",
+    "East US 2", "West Europe",
+    "West US 2", "Norway East",
+    "Italy North",
+    "Mexico Central", "Spain Central"
+  ]
 }
 
 # This allows us to randomize the region for the resource group.
-resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
+resource "random_integer" "region" {
+  max = length(local.regions) - 1
   min = 0
 }
 ## End of section to provide a random Azure region for the resource group
@@ -42,7 +49,7 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = element(local.regions, random_integer.region.result)
   name     = module.naming.resource_group.name_unique
 }
 
@@ -72,10 +79,13 @@ resource "azurerm_public_ip" "example" {
   tags = {
     environment = "Production"
   }
+  zones = [1, 2, 3]
 }
 
 module "azure_bastion" {
   source = "../../"
+  #source  = "Azure/avm-res-network-bastionhost/azurerm"
+
 
   enable_telemetry    = true
   name                = module.naming.bastion_host.name_unique
@@ -86,6 +96,7 @@ module "azure_bastion" {
     name                 = "my-ipconfig"
     subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
     public_ip_address_id = azurerm_public_ip.example.id
+    create_public_ip     = false
   }
 
   tags = {
@@ -101,7 +112,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -111,7 +122,7 @@ The following resources are used by this module:
 
 - [azurerm_public_ip.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [random_integer.region](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -147,12 +158,6 @@ Version:
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
 Source: Azure/naming/azurerm
-
-Version: ~> 0.3
-
-### <a name="module_regions"></a> [regions](#module\_regions)
-
-Source: Azure/regions/azurerm
 
 Version: ~> 0.3
 
