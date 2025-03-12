@@ -24,8 +24,7 @@ locals {
     "Central US", "Sweden Central", "Israel Central", "Korea Central",
     "East US", "UK South",
     "East US 2", "West Europe",
-    "West US 2", "Norway East",
-    "East US 2 EUAP", "Italy North",
+    "West US 2", "Norway East", "Italy North",
     "Mexico Central", "Spain Central"
   ]
 }

@@ -25,7 +25,7 @@ locals {
     "East US", "UK South",
     "East US 2", "West Europe",
     "West US 2", "Norway East",
-    "East US 2 EUAP", "Italy North",
+    "Italy North",
     "Mexico Central", "Spain Central"
   ]
 }
