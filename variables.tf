@@ -1,16 +1,3 @@
-# The private only option for this module will be available in a future release.
-# variable "private_only" {
-#   type        = bool
-#   default     = false
-#   description = "Specifies whether the Azure Bastion Host is configured to be private only."
-#   nullable    = false
-
-#   validation {
-#     condition     = (var.private_only == true && var.sku == "Premium") || var.private_only == false
-#     error_message = "Private only functionality is only available for Premium SKU."
-#   }
-# }
-
 variable "location" {
   type        = string
   description = "The location of the Azure Bastion Host and related resources."
@@ -142,7 +129,7 @@ variable "virtual_network_id" {
 }
 
 variable "zones" {
-  type        = list(number)
+  type        = set(string)
   default     = [1, 2, 3]
   description = "The availability zones where the Azure Bastion Host is deployed."
 

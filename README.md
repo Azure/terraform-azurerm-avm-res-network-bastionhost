@@ -324,7 +324,7 @@ Default: `null`
 
 Description: The availability zones where the Azure Bastion Host is deployed.
 
-Type: `list(number)`
+Type: `set(string)`
 
 Default:
 
