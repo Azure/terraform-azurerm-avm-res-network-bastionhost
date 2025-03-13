@@ -27,7 +27,7 @@ resource "azurerm_bastion_host" "this" {
 
   lifecycle {
     precondition {
-      condition     = length(local.public_ip_zone_config) == length(var.zones)
+      condition     = sort(local.public_ip_zone_config) == sort(var.zones)
       error_message = "The number of zones in the public IP address must match the number of zones in the Azure Bastion Host."
     }
   }

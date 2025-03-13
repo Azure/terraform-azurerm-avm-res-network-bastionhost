@@ -131,7 +131,6 @@ variable "virtual_network_id" {
 variable "zones" {
   type        = set(string)
   default     = ["1", "2", "3"]
-
   description = "The availability zones where the Azure Bastion Host is deployed."
 
   validation {
