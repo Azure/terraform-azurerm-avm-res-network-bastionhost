@@ -26,7 +26,7 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 locals {
   regions = [
-    "Canada Central", "North Europe", "Qatar Central", "South Africa North", "Australia East",
+    "Canada Central", "North Europe", "South Africa North", "Australia East",
     "Central US", "Sweden Central", "Israel Central", "Korea Central",
     "East US", "UK South",
     "East US 2", "West Europe",
