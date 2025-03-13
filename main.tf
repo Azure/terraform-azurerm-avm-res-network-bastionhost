@@ -13,14 +13,22 @@ resource "azurerm_bastion_host" "this" {
   tags                      = var.tags
   tunneling_enabled         = var.tunneling_enabled
   virtual_network_id        = var.virtual_network_id
+  zones                     = var.zones
 
   dynamic "ip_configuration" {
     for_each = var.ip_configuration != null ? [var.ip_configuration] : []
 
     content {
-      name                 = ip_configuration.value.name
-      public_ip_address_id = ip_configuration.value.public_ip_address_id
-      subnet_id            = ip_configuration.value.subnet_id
+      name                 = coalesce(var.ip_configuration.name, "ipconfig-${var.name}")
+      public_ip_address_id = local.public_ip_resource_id
+      subnet_id            = var.ip_configuration.subnet_id
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = sort(local.public_ip_zone_config) == sort(var.zones)
+      error_message = "The number of zones in the public IP address must match the number of zones in the Azure Bastion Host."
     }
   }
 }
@@ -33,6 +41,7 @@ resource "azurerm_management_lock" "this" {
   scope      = azurerm_bastion_host.this.id
   notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
 }
+
 
 resource "azurerm_monitor_diagnostic_setting" "this" {
   for_each = var.diagnostic_settings
@@ -69,11 +78,53 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
   }
 }
 
+module "public_ip_address" {
+  count               = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == true ? 1 : 0) : var.sku == "Developer" ? 0 : 1
+  source              = "Azure/avm-res-network-publicipaddress/azurerm"
+  version             = "0.2.0"
+  enable_telemetry    = var.enable_telemetry
+  resource_group_name = var.resource_group_name
+  name                = "pip-${var.name}"
+  location            = var.location
+  sku                 = "Standard"
+  zones               = var.zones
+}
+
+resource "azurerm_management_lock" "pip" {
+  count = var.lock != null && length(module.public_ip_address) > 0 ? 1 : 0
+
+  lock_level = var.lock.kind
+  name       = coalesce(var.lock.name, "lock-${var.lock.kind}-pip")
+  scope      = module.public_ip_address[0].resource_id
+  notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
+}
+
+data "azurerm_public_ip" "this" {
+  count = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == false ? 1 : 0) : 0
+
+  name                = split("/", var.ip_configuration.public_ip_address_id)[length(split("/", var.ip_configuration.public_ip_address_id)) - 1]
+  resource_group_name = split("/", var.ip_configuration.public_ip_address_id)[4]
+}
+
 resource "azurerm_role_assignment" "this" {
   for_each = var.role_assignments
 
   principal_id                           = each.value.principal_id
   scope                                  = azurerm_bastion_host.this.id
+  condition                              = each.value.condition
+  condition_version                      = each.value.condition_version
+  delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
+  principal_type                         = each.value.principal_type
+  role_definition_id                     = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : null
+  role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
+  skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
+}
+
+resource "azurerm_role_assignment" "pip" {
+  for_each = length(module.public_ip_address) > 0 ? var.role_assignments : {}
+
+  principal_id                           = each.value.principal_id
+  scope                                  = module.public_ip_address[0].resource_id
   condition                              = each.value.condition
   condition_version                      = each.value.condition_version
   delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id

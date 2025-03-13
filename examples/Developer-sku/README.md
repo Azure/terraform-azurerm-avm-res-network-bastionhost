@@ -9,7 +9,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 4.10"
     }
     random = {
       source  = "hashicorp/random"
@@ -55,27 +55,12 @@ module "virtualnetwork" {
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
   address_space       = ["10.0.0.0/16"]
-  subnets = {
-    AzureBastionSubnet = {
-      name             = "AzureBastionSubnet"
-      address_prefixes = ["10.0.0.0/24"]
-    }
-  }
-}
-
-resource "azurerm_public_ip" "example" {
-  allocation_method   = "Static"
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.public_ip.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Standard"
-  tags = {
-    environment = "Production"
-  }
 }
 
 module "azure_bastion" {
   source = "../../"
+  #source  = "Azure/avm-res-network-bastionhost/azurerm"
+
 
   enable_telemetry    = true
   name                = module.naming.bastion_host.name_unique
@@ -83,6 +68,7 @@ module "azure_bastion" {
   location            = azurerm_resource_group.this.location
   sku                 = "Developer"
   virtual_network_id  = module.virtualnetwork.resource_id
+  zones               = []
 
   tags = {
     environment = "production"
@@ -97,7 +83,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.6)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -105,7 +91,6 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_public_ip.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
