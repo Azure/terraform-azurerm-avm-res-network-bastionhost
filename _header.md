@@ -6,9 +6,8 @@ To use this module in your Terraform configuration, you'll need to provide value
 
 ## Features
 
-The module support the `Developer`, `Basic` and `Standard` SKU's for Azure Bastion.
+The module supports the `Developer`, `Basic`, `Standard` and `Premium` SKU's for Azure Bastion.
 
-> NOTE: The `Premium` SKU is not currently supported by this module, but will be added in a future release.
 
 ## Example Usage
 
