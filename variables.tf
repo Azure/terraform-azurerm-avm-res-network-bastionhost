@@ -63,8 +63,12 @@ If you are trying to deploy basic, standard or premium SKU, make sure to provide
 ERROR
   }
   validation {
-    condition     = var.private_only == true ? (var.ip_configuration != null && (var.ip_configuration.create_public_ip == false || var.ip_configuration.public_ip_address_id == null)) : true
+    condition     = var.private_only == true ? (var.ip_configuration != null && (var.ip_configuration.create_public_ip == false && var.ip_configuration.public_ip_address_id == null)) : true
     error_message = "Public IP must not be provided when private only is enabled."
+  }
+  validation {
+    condition     = var.ip_configuration != null ? (var.private_only == false && var.ip_configuration.create_public_ip == false ? var.ip_configuration.public_ip_address_id != null : true) : true
+    error_message = "Public IP address ID must be provided when create_public_ip is set to false."
   }
 }
 

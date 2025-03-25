@@ -35,7 +35,7 @@ resource "azapi_resource" "bastion" {
   location  = var.location
   name      = var.name
   parent_id = var.resource_group_id
-  replace_triggers_refs = [
+  replace_triggers_external_values = [
     var.sku
   ]
   response_export_values = ["properties.dnsName"]
@@ -140,7 +140,7 @@ resource "azurerm_management_lock" "pip" {
 }
 
 data "azurerm_public_ip" "this" {
-  count = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == false && var.ip_configuration.public_ip_address_id != null ? 1 : 0) : 0
+  count = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == false && var.private_only == false ? 1 : 0) : 0
 
   name                = split("/", var.ip_configuration.public_ip_address_id)[length(split("/", var.ip_configuration.public_ip_address_id)) - 1]
   resource_group_name = split("/", var.ip_configuration.public_ip_address_id)[4]
