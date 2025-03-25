@@ -7,9 +7,7 @@ To use this module in your Terraform configuration, you'll need to provide value
 
 ## Features
 
-The module support the `Developer`, `Basic` and `Standard` SKU's for Azure Bastion.
-
-> NOTE: The `Premium` SKU is not currently supported by this module, but will be added in a future release.
+The module supports the `Developer`, `Basic`, `Standard` and `Premium` SKU's for Azure Bastion.
 
 ## Example Usage
 
@@ -54,6 +52,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
+
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
@@ -64,7 +64,8 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_bastion_host.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host) (resource)
+- [azapi_resource.bastion](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.bastion_developer](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) (resource)
 - [azurerm_management_lock.pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
@@ -93,9 +94,9 @@ Description: The name of the Azure Bastion Host.
 
 Type: `string`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+### <a name="input_resource_group_id"></a> [resource\_group\_id](#input\_resource\_group\_id)
 
-Description: The name of the resource group where the Azure Bastion Host will be deployed.
+Description: The ID of the resource group where the Azure Bastion Host will be deployed.
 
 Type: `string`
 
@@ -103,13 +104,13 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_copy_paste_enabled"></a> [copy\_paste\_enabled](#input\_copy\_paste\_enabled)
+### <a name="input_copy_paste_disabled"></a> [copy\_paste\_disabled](#input\_copy\_paste\_disabled)
 
 Description: Specifies whether copy-paste functionality is enabled for the Azure Bastion Host.
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
@@ -231,6 +232,14 @@ object({
 
 Default: `null`
 
+### <a name="input_private_only"></a> [private\_only](#input\_private\_only)
+
+Description: Specifies whether the Azure Bastion Host is configured to be private only.
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description: A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
@@ -306,7 +315,7 @@ Default: `null`
 
 ### <a name="input_tunneling_enabled"></a> [tunneling\_enabled](#input\_tunneling\_enabled)
 
-Description: Specifies whether tunneling functionality is enabled for the Azure Bastion Host.
+Description: Specifies whether tunneling functionality is enabled for the Azure Bastion Host. (Native client support for SSH and RDP tunneling)
 
 Type: `bool`
 
