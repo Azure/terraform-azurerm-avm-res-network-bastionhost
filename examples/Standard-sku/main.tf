@@ -20,6 +20,10 @@ provider "azurerm" {
   features {}
 }
 
+provider "azapi" {
+
+}
+
 ## Section to provide a random Azure region for the resource group. The bellow regions currently support Zone Redundant Bastion.
 # This allows us to randomize the region for the resource group.
 locals {
