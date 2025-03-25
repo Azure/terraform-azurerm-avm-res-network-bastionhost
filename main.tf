@@ -63,10 +63,11 @@ resource "azapi_resource" "bastion_developer" {
       }
     }
   }
-  location  = var.location
-  name      = var.name
-  parent_id = var.resource_group_id
-  tags      = var.tags
+  location               = var.location
+  name                   = var.name
+  parent_id              = var.resource_group_id
+  response_export_values = ["properties.dnsName"]
+  tags                   = var.tags
 }
 
 resource "azurerm_management_lock" "this" {
