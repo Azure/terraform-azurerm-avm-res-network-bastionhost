@@ -84,7 +84,7 @@ module "public_ip_address" {
   version             = "0.2.0"
   enable_telemetry    = var.enable_telemetry
   resource_group_name = var.resource_group_name
-  name                = "pip-${var.name}"
+  name                = coalesce(var.ip_configuration.public_ip_address_name, "pip-${var.name}")
   location            = var.location
   sku                 = "Standard"
   zones               = var.zones
