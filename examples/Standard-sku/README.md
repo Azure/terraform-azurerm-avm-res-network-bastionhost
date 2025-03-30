@@ -96,9 +96,9 @@ module "azure_bastion" {
 
   enable_telemetry    = true
   name                = module.naming.bastion_host.name_unique
-  resource_group_id   = azurerm_resource_group.this.id
+  resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
-  copy_paste_disabled = false
+  copy_paste_enabled  = false
   file_copy_enabled   = false
   sku                 = "Standard"
   ip_configuration = {

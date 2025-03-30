@@ -77,9 +77,9 @@ module "azure_bastion" {
 
   enable_telemetry    = true
   name                = module.naming.bastion_host.name_unique
-  resource_group_id   = azurerm_resource_group.this.id
+  resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
-  copy_paste_disabled = false
+  copy_paste_enabled  = false
   file_copy_enabled   = true
   sku                 = "Premium"
   ip_configuration = {
@@ -92,7 +92,7 @@ module "azure_bastion" {
   tunneling_enabled         = false
   kerberos_enabled          = true
   session_recording_enabled = true
-  private_only              = true
+  private_only_enabled      = true
 
   tags = {
     environment = "production"

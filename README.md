@@ -73,6 +73,7 @@ The following resources are used by this module:
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [azapi_client_config.current](https://registry.terraform.io/providers/azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_public_ip.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/public_ip) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
@@ -94,9 +95,9 @@ Description: The name of the Azure Bastion Host.
 
 Type: `string`
 
-### <a name="input_resource_group_id"></a> [resource\_group\_id](#input\_resource\_group\_id)
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description: The ID of the resource group where the Azure Bastion Host will be deployed.
+Description: The name of the resource group where the Azure Bastion Host will be deployed.
 
 Type: `string`
 
@@ -104,13 +105,13 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_copy_paste_disabled"></a> [copy\_paste\_disabled](#input\_copy\_paste\_disabled)
+### <a name="input_copy_paste_enabled"></a> [copy\_paste\_enabled](#input\_copy\_paste\_enabled)
 
 Description: Specifies whether copy-paste functionality is enabled for the Azure Bastion Host.
 
 Type: `bool`
 
-Default: `false`
+Default: `true`
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
@@ -232,7 +233,7 @@ object({
 
 Default: `null`
 
-### <a name="input_private_only"></a> [private\_only](#input\_private\_only)
+### <a name="input_private_only_enabled"></a> [private\_only\_enabled](#input\_private\_only\_enabled)
 
 Description: Specifies whether the Azure Bastion Host is configured to be private only.
 

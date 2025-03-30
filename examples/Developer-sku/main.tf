@@ -64,13 +64,13 @@ module "azure_bastion" {
   #source  = "Azure/avm-res-network-bastionhost/azurerm"
 
 
-  enable_telemetry   = true
-  name               = module.naming.bastion_host.name_unique
-  resource_group_id  = azurerm_resource_group.this.id
-  location           = azurerm_resource_group.this.location
-  sku                = "Developer"
-  virtual_network_id = module.virtualnetwork.resource_id
-  zones              = []
+  enable_telemetry    = true
+  name                = module.naming.bastion_host.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+  sku                 = "Developer"
+  virtual_network_id  = module.virtualnetwork.resource_id
+  zones               = []
 
   tags = {
     environment = "production"

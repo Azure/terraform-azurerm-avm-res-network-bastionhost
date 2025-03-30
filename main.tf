@@ -9,11 +9,11 @@ resource "azapi_resource" "bastion" {
     }
     zones = var.zones
     properties = {
-      disableCopyPaste         = var.copy_paste_disabled
+      disableCopyPaste         = !var.copy_paste_enabled
       enableFileCopy           = var.file_copy_enabled
       enableIpConnect          = var.ip_connect_enabled
       enableKerberos           = var.kerberos_enabled
-      enablePrivateOnlyBastion = var.private_only
+      enablePrivateOnlyBastion = var.private_only_enabled
       enableSessionRecording   = var.session_recording_enabled
       enableShareableLink      = var.shareable_link_enabled
       enableTunneling          = var.tunneling_enabled
@@ -34,7 +34,7 @@ resource "azapi_resource" "bastion" {
   }
   location  = var.location
   name      = var.name
-  parent_id = var.resource_group_id
+  parent_id = local.resource_group_id
   replace_triggers_external_values = [
     var.sku
   ]
@@ -43,7 +43,7 @@ resource "azapi_resource" "bastion" {
 
   lifecycle {
     precondition {
-      condition     = var.private_only != true ? sort(local.public_ip_zone_config) == sort(var.zones) : true
+      condition     = var.private_only_enabled != true ? sort(local.public_ip_zone_config) == sort(var.zones) : true
       error_message = "The number of zones in the public IP address must match the number of zones in the Azure Bastion Host."
     }
   }
@@ -65,7 +65,7 @@ resource "azapi_resource" "bastion_developer" {
   }
   location               = var.location
   name                   = var.name
-  parent_id              = var.resource_group_id
+  parent_id              = local.resource_group_id
   response_export_values = ["properties.dnsName"]
   tags                   = var.tags
 }
@@ -115,16 +115,13 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
   }
 }
 
-locals {
-  resource_group_name = length(var.resource_group_id) > 0 ? split("/", var.resource_group_id)[4] : null
-}
 
 module "public_ip_address" {
   count               = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == true ? 1 : 0) : var.sku == "Developer" ? 0 : 1
   source              = "Azure/avm-res-network-publicipaddress/azurerm"
   version             = "0.2.0"
   enable_telemetry    = var.enable_telemetry
-  resource_group_name = local.resource_group_name
+  resource_group_name = var.resource_group_name
   name                = "pip-${var.name}"
   location            = var.location
   sku                 = "Standard"
@@ -141,7 +138,7 @@ resource "azurerm_management_lock" "pip" {
 }
 
 data "azurerm_public_ip" "this" {
-  count = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == false && var.private_only == false ? 1 : 0) : 0
+  count = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == false && var.private_only_enabled == false ? 1 : 0) : 0
 
   name                = split("/", var.ip_configuration.public_ip_address_id)[length(split("/", var.ip_configuration.public_ip_address_id)) - 1]
   resource_group_name = split("/", var.ip_configuration.public_ip_address_id)[4]

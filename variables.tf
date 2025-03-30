@@ -9,19 +9,19 @@ variable "name" {
   description = "The name of the Azure Bastion Host."
 }
 
-variable "resource_group_id" {
+variable "resource_group_name" {
   type        = string
-  description = "The ID of the resource group where the Azure Bastion Host will be deployed."
+  description = "The name of the resource group where the Azure Bastion Host will be deployed."
 }
 
-variable "copy_paste_disabled" {
+variable "copy_paste_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "Specifies whether copy-paste functionality is enabled for the Azure Bastion Host."
   nullable    = false
 
   validation {
-    condition     = var.copy_paste_disabled == true ? can(regex("^(Standard|Premium)$", var.sku)) : true
+    condition     = var.copy_paste_enabled == false ? can(regex("^(Standard|Premium)$", var.sku)) : true
     error_message = "Copy-paste functionality is only available for the Standard and the Premium SKU."
   }
 }
@@ -63,11 +63,11 @@ If you are trying to deploy basic, standard or premium SKU, make sure to provide
 ERROR
   }
   validation {
-    condition     = var.private_only == true ? (var.ip_configuration != null && (var.ip_configuration.create_public_ip == false && var.ip_configuration.public_ip_address_id == null)) : true
+    condition     = var.private_only_enabled == true ? (var.ip_configuration != null && (var.ip_configuration.create_public_ip == false && var.ip_configuration.public_ip_address_id == null)) : true
     error_message = "Public IP must not be provided when private only is enabled."
   }
   validation {
-    condition     = var.ip_configuration != null ? (var.private_only == false && var.ip_configuration.create_public_ip == false ? var.ip_configuration.public_ip_address_id != null : true) : true
+    condition     = var.ip_configuration != null ? (var.private_only_enabled == false && var.ip_configuration.create_public_ip == false ? var.ip_configuration.public_ip_address_id != null : true) : true
     error_message = "Public IP address ID must be provided when create_public_ip is set to false."
   }
 }
@@ -96,14 +96,14 @@ variable "kerberos_enabled" {
   }
 }
 
-variable "private_only" {
+variable "private_only_enabled" {
   type        = bool
   default     = false
   description = "Specifies whether the Azure Bastion Host is configured to be private only."
   nullable    = false
 
   validation {
-    condition     = var.private_only == true ? var.sku == "Premium" : true
+    condition     = var.private_only_enabled == true ? var.sku == "Premium" : true
     error_message = "Private only functionality is only available for Premium SKU."
   }
 }
