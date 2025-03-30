@@ -5,7 +5,10 @@
 # role_definition_resource_substring: This is the substring used to identify the role definition resource in Azure.
 
 locals {
-  public_ip_resource_id              = length(module.public_ip_address) == 0 ? (length(data.azurerm_public_ip.this) == 0 ? null : data.azurerm_public_ip.this[0].id) : module.public_ip_address[0].resource_id
+  public_ip_resource_id              = length(module.public_ip_address) == 0 ? (length(data.azurerm_public_ip.this) == 0 ? null : { id = data.azurerm_public_ip.this[0].id }) : { id = module.public_ip_address[0].resource_id }
   public_ip_zone_config              = length(module.public_ip_address) == 0 ? (length(data.azurerm_public_ip.this) == 0 ? [] : data.azurerm_public_ip.this[0].zones) : var.zones
+  resource_group_id                  = "/subscriptions/${data.azapi_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}"
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
 }
+
+data "azapi_client_config" "current" {}
