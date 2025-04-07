@@ -7,6 +7,10 @@ This deploys a Basic SKU Bastion host.
 terraform {
   required_version = ">= 1.9, < 2.0"
   required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.10"
@@ -16,6 +20,10 @@ terraform {
       version = "~> 3.5"
     }
   }
+}
+
+provider "azapi" {
+
 }
 
 provider "azurerm" {
@@ -85,8 +93,6 @@ resource "azurerm_public_ip" "example" {
 module "azure_bastion" {
   source = "../../"
   #source  = "Azure/avm-res-network-bastionhost/azurerm"
-
-
   enable_telemetry    = true
   name                = module.naming.bastion_host.name_unique
   resource_group_name = azurerm_resource_group.this.name
@@ -111,6 +117,8 @@ module "azure_bastion" {
 The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
+
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
