@@ -52,7 +52,7 @@ The IP configuration for the Azure Bastion Host.
 - `name` - The name of the IP configuration.
 - `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
 - `create_public_ip` - Specifies whether a public IP address should be created by the module. if both `create_public_ip` and `public_ip_address_id` are set, the `public_ip_address_id` will be ignored.
-- `public_ip_address_name` - The Name of the public IP address to create.
+- `public_ip_address_name` - The Name of the public IP address to create. Will be ignored if `public_ip_address_id` is set.
 - `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
 DESCRIPTION
 
