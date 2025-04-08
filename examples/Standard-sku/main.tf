@@ -1,6 +1,10 @@
 terraform {
   required_version = ">= 1.9, < 2.0"
   required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.10"
@@ -14,6 +18,10 @@ terraform {
 
 provider "azurerm" {
   features {}
+}
+
+provider "azapi" {
+
 }
 
 ## Section to provide a random Azure region for the resource group. The bellow regions currently support Zone Redundant Bastion.
@@ -84,7 +92,7 @@ module "azure_bastion" {
   name                = module.naming.bastion_host.name_unique
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
-  copy_paste_enabled  = true
+  copy_paste_enabled  = false
   file_copy_enabled   = false
   sku                 = "Standard"
   ip_configuration = {

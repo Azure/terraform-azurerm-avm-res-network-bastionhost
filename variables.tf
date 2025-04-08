@@ -19,6 +19,11 @@ variable "copy_paste_enabled" {
   default     = true
   description = "Specifies whether copy-paste functionality is enabled for the Azure Bastion Host."
   nullable    = false
+
+  validation {
+    condition     = var.copy_paste_enabled == false ? can(regex("^(Standard|Premium)$", var.sku)) : true
+    error_message = "Copy-paste functionality is only available for the Standard and the Premium SKU."
+  }
 }
 
 variable "file_copy_enabled" {
@@ -26,6 +31,11 @@ variable "file_copy_enabled" {
   default     = false
   description = "Specifies whether file copy functionality is enabled for the Azure Bastion Host."
   nullable    = false
+
+  validation {
+    condition     = var.file_copy_enabled == true ? can(regex("^(Standard|Premium)$", var.sku)) : true
+    error_message = "File copy functionality is only available for the Standard and the Premium SKU."
+  }
 }
 
 variable "ip_configuration" {
@@ -48,7 +58,19 @@ DESCRIPTION
 
   validation {
     condition     = (var.sku == "Developer" && var.ip_configuration == null) || (var.sku != "Developer" && var.ip_configuration != null)
-    error_message = "The IP configuration is not required for the Developer SKU."
+    error_message = <<ERROR
+The IP configuration is required for all skus other than the Developer SKU.
+If you are trying to deploy the Developer SKU, please remove the ip_configuration block.
+If you are trying to deploy basic, standard or premium SKU, make sure to provide the ip_configuration block.
+ERROR
+  }
+  validation {
+    condition     = var.private_only_enabled == true ? (var.ip_configuration != null && (var.ip_configuration.create_public_ip == false && var.ip_configuration.public_ip_address_id == null)) : true
+    error_message = "Public IP must not be provided when private only is enabled."
+  }
+  validation {
+    condition     = var.ip_configuration != null ? (var.private_only_enabled == false && var.ip_configuration.create_public_ip == false ? var.ip_configuration.public_ip_address_id != null : true) : true
+    error_message = "Public IP address ID must be provided when create_public_ip is set to false."
   }
 }
 
@@ -57,6 +79,11 @@ variable "ip_connect_enabled" {
   default     = false
   description = "Specifies whether IP connect functionality is enabled for the Azure Bastion Host."
   nullable    = false
+
+  validation {
+    condition     = var.ip_connect_enabled == true ? can(regex("^(Standard|Premium)$", var.sku)) : true
+    error_message = "IP connect functionality is only available for the Standard and the Premium SKU."
+  }
 }
 
 variable "kerberos_enabled" {
@@ -64,6 +91,23 @@ variable "kerberos_enabled" {
   default     = false
   description = "Specifies whether Kerberos authentication is enabled for the Azure Bastion Host."
   nullable    = false
+
+  validation {
+    condition     = var.kerberos_enabled == true ? var.sku != "Developer" : true
+    error_message = "Kerberos authentication is not available for the Developer SKU."
+  }
+}
+
+variable "private_only_enabled" {
+  type        = bool
+  default     = false
+  description = "Specifies whether the Azure Bastion Host is configured to be private only."
+  nullable    = false
+
+  validation {
+    condition     = var.private_only_enabled == true ? var.sku == "Premium" : true
+    error_message = "Private only functionality is only available for Premium SKU."
+  }
 }
 
 variable "scale_units" {
@@ -90,6 +134,11 @@ variable "shareable_link_enabled" {
   default     = false
   description = "Specifies whether shareable link functionality is enabled for the Azure Bastion Host."
   nullable    = false
+
+  validation {
+    condition     = var.shareable_link_enabled == true ? can(regex("^(Standard|Premium)$", var.sku)) : true
+    error_message = "Shareable link functionality is only available for the Standard and the Premium SKU."
+  }
 }
 
 variable "sku" {
@@ -110,7 +159,7 @@ DESCRIPTION
 variable "tunneling_enabled" {
   type        = bool
   default     = false
-  description = "Specifies whether tunneling functionality is enabled for the Azure Bastion Host."
+  description = "Specifies whether tunneling functionality is enabled for the Azure Bastion Host. (Native client support for SSH and RDP tunneling)"
   nullable    = false
 
   validation {
@@ -126,7 +175,7 @@ variable "virtual_network_id" {
 
   validation {
     condition     = (var.sku == "Developer" && var.virtual_network_id != null) || var.sku != "Developer" && var.virtual_network_id == null
-    error_message = "The virtual network ID is required for the Developer SKU (Only)."
+    error_message = "The virtual_network_id is required for the Developer SKU (Only). If you are trying to deploy the Developer SKU, please provide the virtual_network_id. if not, please remove it."
   }
 }
 
@@ -137,6 +186,6 @@ variable "zones" {
 
   validation {
     condition     = (length(var.zones) >= 0 && var.sku != "Developer") || length(var.zones) == 0 && var.sku == "Developer"
-    error_message = "The Developer SKU does not support availability zones."
+    error_message = "The Developer SKU does not support availability zones. Please set the zones to an empty list. zones = [  ]"
   }
 }
