@@ -237,7 +237,7 @@ Default: `null`
 
 ### <a name="input_private_only_enabled"></a> [private\_only\_enabled](#input\_private\_only\_enabled)
 
-Description: Specifies whether the Azure Bastion Host is configured to be private only.
+Description: Specifies whether the Azure Bastion Host is configured to be private only. This is a premium SKU feature.
 
 Type: `bool`
 
