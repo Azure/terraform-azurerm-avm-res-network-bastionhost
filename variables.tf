@@ -101,7 +101,7 @@ variable "kerberos_enabled" {
 variable "private_only_enabled" {
   type        = bool
   default     = false
-  description = "Specifies whether the Azure Bastion Host is configured to be private only."
+  description = "Specifies whether the Azure Bastion Host is configured to be private only. This is a premium SKU feature."
   nullable    = false
 
   validation {
