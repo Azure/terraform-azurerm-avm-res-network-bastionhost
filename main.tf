@@ -10,6 +10,7 @@ resource "azapi_resource" "bastion" {
     zones = var.zones
     properties = {
       disableCopyPaste         = !var.copy_paste_enabled
+      dnsName                  = var.dnsName
       enableFileCopy           = var.file_copy_enabled
       enableIpConnect          = var.ip_connect_enabled
       enableKerberos           = var.kerberos_enabled
