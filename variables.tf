@@ -26,6 +26,12 @@ variable "copy_paste_enabled" {
   }
 }
 
+variable "dns_name" {
+  type        = string
+  default     = null
+  description = "FQDN for the endpoint on which bastion host is accessible."
+}
+
 variable "file_copy_enabled" {
   type        = bool
   default     = false
