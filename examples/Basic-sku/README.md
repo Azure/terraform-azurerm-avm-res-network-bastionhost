@@ -65,11 +65,11 @@ module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "~> 0.2"
 
-  name                = module.naming.virtual_network.name_unique
-  enable_telemetry    = false
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
   address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = false
+  name                = module.naming.virtual_network.name_unique
   subnets = {
     AzureBastionSubnet = {
       name             = "AzureBastionSubnet"
@@ -92,19 +92,19 @@ resource "azurerm_public_ip" "example" {
 
 module "azure_bastion" {
   source = "../../"
-  #source  = "Azure/avm-res-network-bastionhost/azurerm"
-  enable_telemetry    = true
+
+  location            = azurerm_resource_group.this.location
   name                = module.naming.bastion_host.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-  sku                 = "Basic"
+  #source  = "Azure/avm-res-network-bastionhost/azurerm"
+  enable_telemetry = true
   ip_configuration = {
     name                 = "my-ipconfig"
     subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
     public_ip_address_id = azurerm_public_ip.example.id
     create_public_ip     = false
   }
-
+  sku = "Basic"
   tags = {
     environment = "production"
   }

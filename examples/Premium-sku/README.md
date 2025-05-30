@@ -64,11 +64,11 @@ module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "~> 0.2"
 
-  name                = module.naming.virtual_network.name_unique
-  enable_telemetry    = false
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
   address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = false
+  name                = module.naming.virtual_network.name_unique
   subnets = {
     AzureBastionSubnet = {
       name             = "AzureBastionSubnet"
@@ -79,30 +79,28 @@ module "virtualnetwork" {
 
 module "azure_bastion" {
   source = "../../"
-  #source  = "Azure/avm-res-network-bastionhost/azurerm"
 
-  enable_telemetry    = true
+  location            = azurerm_resource_group.this.location
   name                = module.naming.bastion_host.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
   copy_paste_enabled  = false
+  enable_telemetry    = true
   file_copy_enabled   = true
-  sku                 = "Premium"
   ip_configuration = {
     subnet_id        = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
     create_public_ip = false
   }
   ip_connect_enabled        = true
-  scale_units               = 4
-  shareable_link_enabled    = true
-  tunneling_enabled         = false
   kerberos_enabled          = true
-  session_recording_enabled = true
   private_only_enabled      = true
-
+  scale_units               = 4
+  session_recording_enabled = true
+  shareable_link_enabled    = true
+  sku                       = "Premium"
   tags = {
     environment = "production"
   }
+  tunneling_enabled = false
 }
 ```
 

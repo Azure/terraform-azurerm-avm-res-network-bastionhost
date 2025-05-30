@@ -52,27 +52,24 @@ module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "~> 0.2"
 
-  name                = module.naming.virtual_network.name_unique
-  enable_telemetry    = false
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
   address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = false
+  name                = module.naming.virtual_network.name_unique
 }
 
 module "azure_bastion" {
   source = "../../"
-  #source  = "Azure/avm-res-network-bastionhost/azurerm"
 
-
-  enable_telemetry    = true
+  location            = azurerm_resource_group.this.location
   name                = module.naming.bastion_host.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
+  enable_telemetry    = true
   sku                 = "Developer"
-  virtual_network_id  = module.virtualnetwork.resource_id
-  zones               = []
-
   tags = {
     environment = "production"
   }
+  virtual_network_id = module.virtualnetwork.resource_id
+  zones              = []
 }

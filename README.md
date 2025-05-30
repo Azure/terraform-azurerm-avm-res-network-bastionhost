@@ -157,6 +157,14 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_dns_name"></a> [dns\_name](#input\_dns\_name)
+
+Description: FQDN for the endpoint on which bastion host is accessible.
+
+Type: `string`
+
+Default: `null`
+
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
