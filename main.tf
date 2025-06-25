@@ -125,7 +125,11 @@ module "public_ip_address" {
   location            = var.location
   sku                 = "Standard"
   zones               = var.zones
-  tags                = var.tags
+  tags                = var.ip_configuration.public_ip_tags != null ? (
+    var.ip_configuration.public_ip_merge_with_module_tags) ? merge(
+      var.tags, var.ip_configuration.public_ip_tags) : (
+        var.ip_configuration.public_ip_tags) : (
+          var.ip_configuration.public_ip_merge_with_module_tags) ? var.tags : {}
 }
 
 resource "azurerm_management_lock" "pip" {
