@@ -6,6 +6,7 @@ This deploys a Basic SKU Bastion host with only the required variables.
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azapi = {
       source  = "Azure/azapi"
@@ -64,11 +65,11 @@ module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "~> 0.2"
 
-  name                = module.naming.virtual_network.name_unique
-  enable_telemetry    = false
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
   address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = false
+  name                = module.naming.virtual_network.name_unique
   subnets = {
     AzureBastionSubnet = {
       name             = "AzureBastionSubnet"
@@ -79,10 +80,11 @@ module "virtualnetwork" {
 
 module "azure_bastion" {
   source = "../../"
+
+  location = azurerm_resource_group.this.location
   #source  = "Azure/avm-res-network-bastionhost/azurerm"
   name                = module.naming.bastion_host.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
   ip_configuration = {
     subnet_id = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
   }

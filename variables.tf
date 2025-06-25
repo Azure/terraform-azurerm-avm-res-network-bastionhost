@@ -40,13 +40,13 @@ variable "file_copy_enabled" {
 
 variable "ip_configuration" {
   type = object({
-    name                   = optional(string)
-    subnet_id              = string
-    create_public_ip       = optional(bool, true)
-    public_ip_tags         = optional(map(string), null)
+    name                             = optional(string)
+    subnet_id                        = string
+    create_public_ip                 = optional(bool, true)
+    public_ip_tags                   = optional(map(string), null)
     public_ip_merge_with_module_tags = optional(bool, true)
-    public_ip_address_name = optional(string, null)
-    public_ip_address_id   = optional(string, null)
+    public_ip_address_name           = optional(string, null)
+    public_ip_address_id             = optional(string, null)
   })
   default     = null
   description = <<DESCRIPTION

@@ -6,6 +6,7 @@ This deploys a Standard SKU Bastion host.
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
     azapi = {
       source  = "Azure/azapi"
@@ -64,11 +65,11 @@ module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "~> 0.2"
 
-  name                = module.naming.virtual_network.name_unique
-  enable_telemetry    = false
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
   address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = false
+  name                = module.naming.virtual_network.name_unique
   subnets = {
     AzureBastionSubnet = {
       name             = "AzureBastionSubnet"
@@ -91,16 +92,13 @@ resource "azurerm_public_ip" "example" {
 
 module "azure_bastion" {
   source = "../../"
-  #source  = "Azure/avm-res-network-bastionhost/azurerm"
 
-
-  enable_telemetry    = true
+  location            = azurerm_resource_group.this.location
   name                = module.naming.bastion_host.name_unique
   resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
   copy_paste_enabled  = false
+  enable_telemetry    = true
   file_copy_enabled   = false
-  sku                 = "Standard"
   ip_configuration = {
     name                 = "my-ipconfig"
     subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
@@ -108,14 +106,14 @@ module "azure_bastion" {
     create_public_ip     = false
   }
   ip_connect_enabled     = true
+  kerberos_enabled       = true
   scale_units            = 4
   shareable_link_enabled = true
-  tunneling_enabled      = true
-  kerberos_enabled       = true
-
+  sku                    = "Standard"
   tags = {
     environment = "production"
   }
+  tunneling_enabled = true
 }
 ```
 
