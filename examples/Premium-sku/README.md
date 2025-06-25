@@ -90,7 +90,6 @@ module "azure_bastion" {
   sku                 = "Premium"
   ip_configuration = {
     subnet_id        = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
-    create_public_ip = false
   }
   ip_connect_enabled        = true
   scale_units               = 4

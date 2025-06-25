@@ -42,7 +42,6 @@ variable "ip_configuration" {
   type = object({
     name                   = optional(string)
     subnet_id              = string
-    create_public_ip       = optional(bool, true)
     public_ip_address_name = optional(string, null)
     public_ip_address_id   = optional(string, null)
   })
@@ -51,7 +50,6 @@ variable "ip_configuration" {
 The IP configuration for the Azure Bastion Host.
 - `name` - The name of the IP configuration.
 - `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
-- `create_public_ip` - Specifies whether a public IP address should be created by the module. if both `create_public_ip` and `public_ip_address_id` are set, the `public_ip_address_id` will be ignored.
 - `public_ip_address_name` - The Name of the public IP address to create. Will be ignored if `public_ip_address_id` is set.
 - `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
 DESCRIPTION
@@ -65,12 +63,8 @@ If you are trying to deploy basic, standard or premium SKU, make sure to provide
 ERROR
   }
   validation {
-    condition     = var.private_only_enabled == true ? (var.ip_configuration != null && (var.ip_configuration.create_public_ip == false && var.ip_configuration.public_ip_address_id == null)) : true
+    condition     = var.private_only_enabled == true ? (var.ip_configuration != null && var.ip_configuration.public_ip_address_id == null) : true
     error_message = "Public IP must not be provided when private only is enabled."
-  }
-  validation {
-    condition     = var.ip_configuration != null ? (var.private_only_enabled == false && var.ip_configuration.create_public_ip == false ? var.ip_configuration.public_ip_address_id != null : true) : true
-    error_message = "Public IP address ID must be provided when create_public_ip is set to false."
   }
 }
 

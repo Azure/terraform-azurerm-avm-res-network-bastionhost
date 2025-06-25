@@ -102,7 +102,6 @@ module "azure_bastion" {
     name                 = "my-ipconfig"
     subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
     public_ip_address_id = azurerm_public_ip.example.id
-    create_public_ip     = false
   }
 
   tags = {
