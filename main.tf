@@ -125,6 +125,7 @@ module "public_ip_address" {
   location            = var.location
   sku                 = "Standard"
   zones               = var.zones
+  tags                = var.tags
 }
 
 resource "azurerm_management_lock" "pip" {
