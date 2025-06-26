@@ -2,7 +2,10 @@
 resource "azapi_resource" "bastion" {
   count = var.sku == "Developer" ? 0 : 1
 
-  type = "Microsoft.Network/bastionHosts@2024-05-01"
+  location  = var.location
+  name      = var.name
+  parent_id = local.resource_group_id
+  type      = "Microsoft.Network/bastionHosts@2024-05-01"
   body = {
     sku = {
       name = var.sku
@@ -32,9 +35,6 @@ resource "azapi_resource" "bastion" {
       scaleUnits = var.scale_units
     }
   }
-  location  = var.location
-  name      = var.name
-  parent_id = local.resource_group_id
   replace_triggers_external_values = [
     var.sku
   ]
@@ -52,7 +52,10 @@ resource "azapi_resource" "bastion" {
 resource "azapi_resource" "bastion_developer" {
   count = var.sku == "Developer" ? 1 : 0
 
-  type = "Microsoft.Network/bastionHosts@2024-05-01"
+  location  = var.location
+  name      = var.name
+  parent_id = local.resource_group_id
+  type      = "Microsoft.Network/bastionHosts@2024-05-01"
   body = {
     sku = {
       name = var.sku
@@ -63,9 +66,6 @@ resource "azapi_resource" "bastion_developer" {
       }
     }
   }
-  location               = var.location
-  name                   = var.name
-  parent_id              = local.resource_group_id
   response_export_values = ["properties.dnsName"]
   tags                   = var.tags
 }
@@ -116,15 +116,21 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
 
 
 module "public_ip_address" {
-  count               = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == true ? 1 : 0) : var.sku == "Developer" ? 0 : 1
-  source              = "Azure/avm-res-network-publicipaddress/azurerm"
-  version             = "0.2.0"
-  enable_telemetry    = var.enable_telemetry
-  resource_group_name = var.resource_group_name
-  name                = coalesce(var.ip_configuration.public_ip_address_name, "pip-${var.name}")
+  source  = "Azure/avm-res-network-publicipaddress/azurerm"
+  version = "0.2.0"
+  count   = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == true ? 1 : 0) : var.sku == "Developer" ? 0 : 1
+
   location            = var.location
+  name                = coalesce(var.ip_configuration.public_ip_address_name, "pip-${var.name}")
+  resource_group_name = var.resource_group_name
+  enable_telemetry    = var.enable_telemetry
   sku                 = "Standard"
-  zones               = var.zones
+  tags = var.ip_configuration.public_ip_tags != null ? (
+    var.ip_configuration.public_ip_merge_with_module_tags) ? merge(
+    var.tags, var.ip_configuration.public_ip_tags) : (
+    var.ip_configuration.public_ip_tags) : (
+  var.ip_configuration.public_ip_merge_with_module_tags) ? var.tags : {}
+  zones = var.zones
 }
 
 resource "azurerm_management_lock" "pip" {
