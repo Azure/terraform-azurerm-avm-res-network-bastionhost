@@ -53,11 +53,11 @@ variable "ip_configuration" {
 The IP configuration for the Azure Bastion Host.
 - `name` - The name of the IP configuration.
 - `subnet_id` - The ID of the subnet where the Azure Bastion Host will be deployed.
-- `create_public_ip` - Specifies whether a public IP address should be created by the module. if both `create_public_ip` and `public_ip_address_id` are set, the `public_ip_address_id` will be ignored.
+- `create_public_ip` - Specifies whether a public IP address should be created by the module. 
 - `public_ip_tags` - A map of tags to apply to the public IP address.
 - `public_ip_merge_with_module_tags` - If set to true, the public IP tags will be merged with the module's tags. If set to false, only the `public_ip_tags` will be applied to the public IP address.
 - `public_ip_address_name` - The Name of the public IP address to create. Will be ignored if `public_ip_address_id` is set.
-- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host.
+- `public_ip_address_id` - The ID of the public IP address associated with the Azure Bastion Host. If Set, create_public_ip must be set to false.
 DESCRIPTION
 
   validation {
@@ -75,6 +75,15 @@ ERROR
   validation {
     condition     = var.ip_configuration != null ? (var.private_only_enabled == false && var.ip_configuration.create_public_ip == false ? var.ip_configuration.public_ip_address_id != null : true) : true
     error_message = "Public IP address ID must be provided when create_public_ip is set to false."
+  }
+  validation {
+    condition     = var.ip_configuration == null ? true : var.ip_configuration.create_public_ip && var.ip_configuration.public_ip_address_id != null ? false : true
+    error_message = <<ERROR
+*** Variable Validation Error ***
+Both create_public_ip and public_ip_address_id cannot be supplied at the same time. 
+If you want the module to create a public IP address, set create_public_ip to true and remove the public_ip_address_id.
+If you want to use an existing public IP address, set create_public_ip to false and provide the public_ip_address_id.
+ERROR
   }
 }
 
