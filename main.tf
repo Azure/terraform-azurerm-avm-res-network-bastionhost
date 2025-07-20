@@ -130,7 +130,7 @@ module "public_ip_address" {
     var.tags, var.ip_configuration.public_ip_tags) : (
     var.ip_configuration.public_ip_tags) : (
   var.ip_configuration.public_ip_merge_with_module_tags) ? var.tags : {}
-  zones = var.zones
+  zones = [for zone in var.zones : parseint(zone, 10)]
 }
 
 resource "azurerm_management_lock" "pip" {
