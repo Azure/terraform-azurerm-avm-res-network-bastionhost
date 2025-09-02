@@ -35,11 +35,15 @@ resource "azapi_resource" "bastion" {
       scaleUnits = var.scale_units
     }
   }
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_external_values = [
     var.sku
   ]
   response_export_values = ["properties.dnsName"]
   tags                   = var.tags
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   lifecycle {
     precondition {
@@ -66,8 +70,12 @@ resource "azapi_resource" "bastion_developer" {
       }
     }
   }
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = ["properties.dnsName"]
   tags                   = var.tags
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
 resource "azurerm_management_lock" "this" {
