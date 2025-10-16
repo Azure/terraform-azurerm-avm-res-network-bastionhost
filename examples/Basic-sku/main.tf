@@ -60,11 +60,11 @@ module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "~> 0.2"
 
-  address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.0.0.0/16"]
   enable_telemetry    = false
   name                = module.naming.virtual_network.name_unique
+  resource_group_name = azurerm_resource_group.this.name
   subnets = {
     AzureBastionSubnet = {
       name             = "AzureBastionSubnet"
