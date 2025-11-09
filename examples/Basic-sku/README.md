@@ -65,13 +65,13 @@ resource "azurerm_resource_group" "this" {
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "~> 0.2"
+  version = "~> 0.15"
 
-  address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = false
-  name                = module.naming.virtual_network.name_unique
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.0.0.0/16"]
+  enable_telemetry = false
+  name             = module.naming.virtual_network.name_unique
   subnets = {
     AzureBastionSubnet = {
       name             = "AzureBastionSubnet"
@@ -175,7 +175,7 @@ Version: ~> 0.3
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: ~> 0.2
+Version: ~> 0.15
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
