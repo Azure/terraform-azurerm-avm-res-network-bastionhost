@@ -29,7 +29,7 @@ provider "azapi" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  version = "= 0.8.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -41,7 +41,7 @@ resource "random_integer" "region_index" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "= 0.4.2"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -51,7 +51,7 @@ resource "azurerm_resource_group" "this" {
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "~> 0.15"
+  version = "= 0.15.0"
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
