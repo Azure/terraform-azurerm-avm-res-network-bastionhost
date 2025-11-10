@@ -36,7 +36,7 @@ provider "azapi" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  version = "= 0.8.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -48,7 +48,7 @@ resource "random_integer" "region_index" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "= 0.4.2"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -58,13 +58,13 @@ resource "azurerm_resource_group" "this" {
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "~> 0.2"
+  version = "= 0.15.0"
 
-  address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = false
-  name                = module.naming.virtual_network.name_unique
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = ["10.0.0.0/16"]
+  enable_telemetry = false
+  name             = module.naming.virtual_network.name_unique
 }
 
 module "azure_bastion" {
@@ -138,19 +138,19 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: ~> 0.3
+Version: = 0.4.2
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/regions/azurerm
 
-Version: ~> 0.3
+Version: = 0.8.2
 
 ### <a name="module_virtualnetwork"></a> [virtualnetwork](#module\_virtualnetwork)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: ~> 0.2
+Version: = 0.15.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
