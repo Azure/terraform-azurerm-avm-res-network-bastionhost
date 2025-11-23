@@ -87,7 +87,7 @@ module "azure_bastion" {
   ip_connect_enabled        = true
   kerberos_enabled          = true
   private_only_enabled      = true
-  resource_group_name       = azurerm_resource_group.this.name
+  parent_id                 = azurerm_resource_group.this.id
   scale_units               = 4
   session_recording_enabled = true
   shareable_link_enabled    = true

@@ -81,5 +81,5 @@ module "azure_bastion" {
   ip_configuration = {
     subnet_id = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
   }
-  resource_group_name = azurerm_resource_group.this.name
+  parent_id = azurerm_resource_group.this.id
 }

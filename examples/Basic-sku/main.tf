@@ -98,7 +98,7 @@ module "azure_bastion" {
     public_ip_address_id = azurerm_public_ip.example.id
     create_public_ip     = false
   }
-  resource_group_name = azurerm_resource_group.this.name
+  parent_id = azurerm_resource_group.this.id
   sku                 = "Basic"
   tags = {
     environment = "production"
