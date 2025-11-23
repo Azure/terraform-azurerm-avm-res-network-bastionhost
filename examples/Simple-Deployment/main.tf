@@ -77,9 +77,9 @@ module "azure_bastion" {
 
   location = azurerm_resource_group.this.location
   #source  = "Azure/avm-res-network-bastionhost/azurerm"
-  name = module.naming.bastion_host.name_unique
+  name      = module.naming.bastion_host.name_unique
+  parent_id = azurerm_resource_group.this.id
   ip_configuration = {
     subnet_id = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
   }
-  parent_id = azurerm_resource_group.this.id
 }

@@ -77,6 +77,7 @@ module "azure_bastion" {
 
   location           = azurerm_resource_group.this.location
   name               = module.naming.bastion_host.name_unique
+  parent_id          = azurerm_resource_group.this.id
   copy_paste_enabled = false
   enable_telemetry   = true
   file_copy_enabled  = true
@@ -87,7 +88,6 @@ module "azure_bastion" {
   ip_connect_enabled        = true
   kerberos_enabled          = true
   private_only_enabled      = true
-  parent_id                 = azurerm_resource_group.this.id
   scale_units               = 4
   session_recording_enabled = true
   shareable_link_enabled    = true
