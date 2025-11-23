@@ -9,9 +9,9 @@ variable "name" {
   description = "The name of the Azure Bastion Host."
 }
 
-variable "resource_group_name" {
+variable "parent_id" {
   type        = string
-  description = "The name of the resource group where the Azure Bastion Host will be deployed."
+  description = "The ID of the resource group where the Azure Bastion Host will be deployed."
 }
 
 variable "copy_paste_enabled" {

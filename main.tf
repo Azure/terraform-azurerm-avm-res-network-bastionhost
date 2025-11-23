@@ -4,7 +4,7 @@ resource "azapi_resource" "bastion" {
 
   location  = var.location
   name      = var.name
-  parent_id = local.resource_group_id
+  parent_id = var.parent_id
   type      = "Microsoft.Network/bastionHosts@2024-05-01"
   body = {
     sku = {
@@ -58,7 +58,7 @@ resource "azapi_resource" "bastion_developer" {
 
   location  = var.location
   name      = var.name
-  parent_id = local.resource_group_id
+  parent_id = var.parent_id
   type      = "Microsoft.Network/bastionHosts@2024-05-01"
   body = {
     sku = {
@@ -130,7 +130,7 @@ module "public_ip_address" {
 
   location            = var.location
   name                = coalesce(var.ip_configuration.public_ip_address_name, "pip-${var.name}")
-  resource_group_name = var.resource_group_name
+  resource_group_name = split("/", var.parent_id)[4]
   enable_telemetry    = var.enable_telemetry
   sku                 = "Standard"
   tags = var.ip_configuration.public_ip_tags != null ? (

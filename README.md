@@ -96,9 +96,9 @@ Description: The name of the Azure Bastion Host.
 
 Type: `string`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
-Description: The name of the resource group where the Azure Bastion Host will be deployed.
+Description: The ID of the resource group where the Azure Bastion Host will be deployed.
 
 Type: `string`
 

@@ -82,12 +82,11 @@ module "virtualnetwork" {
 module "azure_bastion" {
   source = "../../"
 
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.bastion_host.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  copy_paste_enabled  = false
-  enable_telemetry    = true
-  file_copy_enabled   = true
+  location           = azurerm_resource_group.this.location
+  name               = module.naming.bastion_host.name_unique
+  copy_paste_enabled = false
+  enable_telemetry   = true
+  file_copy_enabled  = true
   ip_configuration = {
     subnet_id        = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
     create_public_ip = false
@@ -95,6 +94,7 @@ module "azure_bastion" {
   ip_connect_enabled        = true
   kerberos_enabled          = true
   private_only_enabled      = true
+  resource_group_name       = azurerm_resource_group.this.name
   scale_units               = 4
   session_recording_enabled = true
   shareable_link_enabled    = true

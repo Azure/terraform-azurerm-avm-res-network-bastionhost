@@ -84,11 +84,11 @@ module "azure_bastion" {
 
   location = azurerm_resource_group.this.location
   #source  = "Azure/avm-res-network-bastionhost/azurerm"
-  name                = module.naming.bastion_host.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+  name = module.naming.bastion_host.name_unique
   ip_configuration = {
     subnet_id = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 ```
 
