@@ -9,5 +9,3 @@ locals {
   public_ip_zone_config              = length(module.public_ip_address) == 0 ? (length(data.azurerm_public_ip.this) == 0 ? [] : data.azurerm_public_ip.this[0].zones) : var.zones
   role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
 }
-
-data "azurerm_subscription" "current" {}
