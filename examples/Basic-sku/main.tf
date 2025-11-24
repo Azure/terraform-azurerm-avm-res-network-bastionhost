@@ -88,9 +88,9 @@ resource "azurerm_public_ip" "example" {
 module "azure_bastion" {
   source = "../../"
 
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.bastion_host.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+  location  = azurerm_resource_group.this.location
+  name      = module.naming.bastion_host.name_unique
+  parent_id = azurerm_resource_group.this.id
   #source  = "Azure/avm-res-network-bastionhost/azurerm"
   enable_telemetry = true
   ip_configuration = {
