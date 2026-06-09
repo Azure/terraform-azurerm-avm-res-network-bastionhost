@@ -51,7 +51,7 @@ resource "azurerm_resource_group" "this" {
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "= 0.15.0"
+  version = "0.17.1"
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
