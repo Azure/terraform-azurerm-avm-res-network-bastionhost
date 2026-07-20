@@ -125,7 +125,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
 
 module "public_ip_address" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
-  version = "0.2.0"
+  version = "0.2.1"
   count   = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == true ? 1 : 0) : var.sku == "Developer" ? 0 : 1
 
   location            = var.location
