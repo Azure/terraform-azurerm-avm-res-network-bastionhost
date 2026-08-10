@@ -1,4 +1,3 @@
-
 # LOCALS Description:
 # public_ip_resource_id: This is the resource ID of the public IP resource to be associated with the Azure Bastion Host. This depends on whether a public IP was provided or not.
 # public_ip_zone_config: The zone configuration of the public IP address. We use this to ensure the configuration matches the Azure Bastion Host.
