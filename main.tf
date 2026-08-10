@@ -1,4 +1,3 @@
-
 resource "azapi_resource" "bastion" {
   count = var.sku == "Developer" ? 0 : 1
 
@@ -87,7 +86,6 @@ resource "azurerm_management_lock" "this" {
   notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
 }
 
-
 resource "azurerm_monitor_diagnostic_setting" "this" {
   for_each = var.diagnostic_settings
 
@@ -113,6 +111,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
       category_group = enabled_log.value
     }
   }
+
   dynamic "metric" {
     for_each = each.value.metric_categories
 
@@ -121,7 +120,6 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
     }
   }
 }
-
 
 module "public_ip_address" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
