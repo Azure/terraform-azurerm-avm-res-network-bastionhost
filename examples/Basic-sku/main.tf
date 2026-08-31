@@ -8,7 +8,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.10"
+      version = "~> 5.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -48,7 +48,7 @@ resource "random_integer" "region" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "= 0.4.2"
+  version = "0.4.3"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -58,7 +58,7 @@ resource "azurerm_resource_group" "this" {
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "= 0.15.0"
+  version = "0.20.0"
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
