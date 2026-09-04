@@ -51,6 +51,7 @@ resource "random_integer" "region" {
   max = length(local.regions) - 1
   min = 0
 }
+
 ## End of section to provide a random Azure region for the resource group
 
 module "naming" {
