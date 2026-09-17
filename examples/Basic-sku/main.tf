@@ -93,7 +93,7 @@ module "azure_bastion" {
   name      = module.naming.bastion_host.name_unique
   parent_id = azurerm_resource_group.this.id
   #source  = "Azure/avm-res-network-bastionhost/azurerm"
-  enable_telemetry = true
+  enable_telemetry = false
   ip_configuration = {
     name                 = "my-ipconfig"
     subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id

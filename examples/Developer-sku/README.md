@@ -74,7 +74,7 @@ module "azure_bastion" {
   location         = azurerm_resource_group.this.location
   name             = module.naming.bastion_host.name_unique
   parent_id        = azurerm_resource_group.this.id
-  enable_telemetry = true
+  enable_telemetry = false
   sku              = "Developer"
   tags = {
     environment = "production"
