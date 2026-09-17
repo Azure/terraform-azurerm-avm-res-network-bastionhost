@@ -99,7 +99,7 @@ module "azure_bastion" {
   name               = module.naming.bastion_host.name_unique
   parent_id          = azurerm_resource_group.this.id
   copy_paste_enabled = false
-  enable_telemetry   = true
+  enable_telemetry   = false
   file_copy_enabled  = false
   ip_configuration = {
     name                 = "my-ipconfig"
