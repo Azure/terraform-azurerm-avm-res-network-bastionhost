@@ -64,7 +64,7 @@ module "virtualnetwork" {
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
   address_space    = ["10.0.0.0/16"]
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   name             = module.naming.virtual_network.name_unique
   subnets = {
     AzureBastionSubnet = {
@@ -93,7 +93,7 @@ module "azure_bastion" {
   name      = module.naming.bastion_host.name_unique
   parent_id = azurerm_resource_group.this.id
   #source  = "Azure/avm-res-network-bastionhost/azurerm"
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   ip_configuration = {
     name                 = "my-ipconfig"
     subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id

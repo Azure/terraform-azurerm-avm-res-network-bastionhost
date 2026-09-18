@@ -70,7 +70,7 @@ module "virtualnetwork" {
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
   address_space    = ["10.0.0.0/16"]
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   name             = module.naming.virtual_network.name_unique
   subnets = {
     AzureBastionSubnet = {
@@ -99,7 +99,7 @@ module "azure_bastion" {
   name               = module.naming.bastion_host.name_unique
   parent_id          = azurerm_resource_group.this.id
   copy_paste_enabled = false
-  enable_telemetry   = false
+  enable_telemetry   = var.enable_telemetry
   file_copy_enabled  = false
   ip_configuration = {
     name                 = "my-ipconfig"
@@ -147,7 +147,17 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `false`
 
 ## Outputs
 

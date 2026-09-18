@@ -57,7 +57,7 @@ module "virtualnetwork" {
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
   address_space    = ["10.0.0.0/16"]
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   name             = module.naming.virtual_network.name_unique
 }
 
@@ -67,7 +67,7 @@ module "azure_bastion" {
   location         = azurerm_resource_group.this.location
   name             = module.naming.bastion_host.name_unique
   parent_id        = azurerm_resource_group.this.id
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   sku              = "Developer"
   tags = {
     environment = "production"
