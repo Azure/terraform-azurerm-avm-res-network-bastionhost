@@ -11,8 +11,15 @@ terraform {
   required_providers {
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 2.0"
+      version = "~> 2.12"
     }
+    # 🔴 NOT used by anything in this example. It is declared and configured because the
+    # module under test still calls `Azure/avm-res-network-publicipaddress/azurerm`, which
+    # is AzureRM-based and has no AzAPI-only release. This example never reaches that call
+    # -- `private_only_enabled = true` and `create_public_ip = false` leave its `count` at
+    # 0 -- but a provider requirement is static, so the declaration and the `features`
+    # block both have to stay. Both go when that module ships AzAPI -- see `terraform.tf`
+    # in the module root.
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.10"
@@ -58,17 +65,24 @@ module "naming" {
   version = "= 0.4.2"
 }
 
-resource "azurerm_resource_group" "this" {
-  location = element(local.regions, random_integer.region.result)
-  name     = module.naming.resource_group.name_unique
+# Supplies the subscription ID that the resource group below hangs off. Replaces
+# `data.azurerm_client_config`, which the AzureRM resource group did not need only
+# because AzureRM took the subscription implicitly from its provider block.
+data "azapi_client_config" "current" {}
+
+resource "azapi_resource" "rg" {
+  location  = element(local.regions, random_integer.region.result)
+  name      = module.naming.resource_group.name_unique
+  parent_id = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
+  type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 }
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "= 0.15.0"
+  version = "= 0.22.2"
 
-  location         = azurerm_resource_group.this.location
-  parent_id        = azurerm_resource_group.this.id
+  location         = azapi_resource.rg.location
+  parent_id        = azapi_resource.rg.id
   address_space    = ["10.0.0.0/16"]
   enable_telemetry = var.enable_telemetry
   name             = module.naming.virtual_network.name_unique
@@ -83,9 +97,9 @@ module "virtualnetwork" {
 module "azure_bastion" {
   source = "../../"
 
-  location           = azurerm_resource_group.this.location
+  location           = azapi_resource.rg.location
   name               = module.naming.bastion_host.name_unique
-  parent_id          = azurerm_resource_group.this.id
+  parent_id          = azapi_resource.rg.id
   copy_paste_enabled = false
   enable_telemetry   = var.enable_telemetry
   file_copy_enabled  = true
@@ -114,7 +128,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
@@ -124,8 +138,9 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azapi_resource.rg](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.region](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -178,7 +193,7 @@ Version: = 0.4.2
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: = 0.15.0
+Version: = 0.22.2
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
