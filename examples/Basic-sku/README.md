@@ -13,17 +13,6 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.12"
     }
-    # 🔴 NOT used by anything in this example. It is declared and configured because the
-    # module under test still calls `Azure/avm-res-network-publicipaddress/azurerm`, which
-    # is AzureRM-based and has no AzAPI-only release. This example never reaches that call
-    # -- `create_public_ip = false` leaves its `count` at 0, and the public IP below is an
-    # `azapi_resource` -- but a provider requirement is static, so the declaration and the
-    # `features` block both have to stay. Both go when that module ships AzAPI -- see
-    # `terraform.tf` in the module root.
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.10"
-    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
@@ -33,10 +22,6 @@ terraform {
 
 provider "azapi" {
 
-}
-
-provider "azurerm" {
-  features {}
 }
 
 ## Section to provide a random Azure region for the resource group. The bellow regions currently support Zone Redundant Bastion.
@@ -145,8 +130,6 @@ The following requirements are needed by this module:
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
-
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 

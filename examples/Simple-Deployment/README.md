@@ -13,25 +13,11 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.12"
     }
-    # 🔴 THE ONE EXAMPLE THAT GENUINELY APPLIES AN AZURERM RESOURCE, and none of them are
-    # written here. `ip_configuration` omits `create_public_ip`, which defaults to true,
-    # so the module under test instantiates `Azure/avm-res-network-publicipaddress/azurerm`
-    # -- AzureRM-based, with no AzAPI-only release. That is the sole reason `azurerm` is
-    # still required and configured. It goes when that module ships AzAPI; see
-    # `terraform.tf` in the module root for the exit condition.
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.10"
-    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
     }
   }
-}
-
-provider "azurerm" {
-  features {}
 }
 
 provider "azapi" {
@@ -115,8 +101,6 @@ The following requirements are needed by this module:
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
-
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 

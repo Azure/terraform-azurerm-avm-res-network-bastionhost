@@ -225,7 +225,7 @@ moved {
 # implementation of the public IP module and no `hashicorp/azurerm` provider is
 # installed for this module graph any more.
 #
-# `Azure/avm-res-network-publicipaddress/azurerm` 0.3.0 is the AzAPI-only
+# The AzAPI version of `Azure/avm-res-network-publicipaddress/azurerm` is the AzAPI-only
 # release. Its breaking change is exactly one input: the AzureRM-era
 # `resource_group_name` was DELETED -- not deprecated -- and replaced by a
 # REQUIRED `parent_id` carrying the fully-qualified ARM resource-group ID, which
@@ -256,13 +256,14 @@ moved {
 # `version` is deliberately absent because Terraform rejects it on a git source.
 # -----------------------------------------------------------------------------
 module "public_ip_address" {
+  # tflint-ignore: avm_terraform_module_source_required // pre-release candidate pinned to an immutable commit; reverts to the registry source on release
   source = "git::https://github.com/Git-PrinceNagar/terraform-azurerm-avm-res-network-publicipaddress.git?ref=c9f4bd6951e8b9bc8c8ec3fe8a5975b1def750d4"
   count  = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == true ? 1 : 0) : var.sku == "Developer" ? 0 : 1
 
   location = var.location
   name     = coalesce(var.ip_configuration.public_ip_address_name, "pip-${var.name}")
   # Was `resource_group_name = local.parent_resource_group.resource_group_name`,
-  # which was itself a replacement for `split("/", var.parent_id)[4]`. 0.3.0 takes
+  # which was itself a replacement for `split("/", var.parent_id)[4]`. the AzAPI version takes
   # the fully-qualified resource-group ID directly, so the decomposition is gone
   # entirely and `var.parent_id` -- already TFNFR38-validated here -- is forwarded
   # unchanged. TFRMFR1: a resource module takes its parent scope as an ID.

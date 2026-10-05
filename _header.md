@@ -119,7 +119,7 @@ and nothing else; `hashicorp/azurerm` does not appear in `.terraform.lock.hcl`.
 
 The last AzureRM dependency was `module.public_ip_address`
 (`Azure/avm-res-network-publicipaddress/azurerm`), which carried
-`azurerm >= 3.116, < 5.0` in its own `required_providers`. Its 0.3.0 release is
+`azurerm >= 3.116, < 5.0` in its own `required_providers`. Its AzAPI version is
 AzAPI-only, so that requirement is gone and with it the widened floor that
 earlier notes described.
 
@@ -128,7 +128,7 @@ Two consequences for a consumer:
 - **You may delete `provider "azurerm" { features {} }` from your root
   configuration**, if it was there only for this module. It is no longer needed
   even when this module creates a public IP.
-- **The public IP module's own input changed.** 0.3.0 deleted
+- **The public IP module's own input changed.** The AzAPI version deleted
   `resource_group_name` and replaced it with a required `parent_id` taking the
   fully-qualified resource-group ID. This module absorbs that internally — it
   forwards its own `var.parent_id` — so nothing in *your* configuration changes.

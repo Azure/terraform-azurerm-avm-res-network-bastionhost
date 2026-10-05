@@ -82,20 +82,57 @@ address exactly one `moved` destination, and `azurerm_bastion_host.this` had no
 `count`, so its single slot is spent on the non-Developer path. Those
 deployments see a destroy and recreate.
 
-### `hashicorp/azurerm` is still required, but no longer declared here
+### BREAKING CHANGE — `sku = "Developer"` upgraded from v0.6.0 or earlier
 
-This module declares no `azurerm_*` resource or data source, so `azurerm` has
-been removed from its `required_providers`. It is **not** yet gone from the
-dependency graph: `module.public_ip_address` is
-`Azure/avm-res-network-publicipaddress/azurerm`, which still requires
-`azurerm >= 3.116, < 5.0` on its own account. Two consequences for a consumer:
+**Who is affected:** only a consumer whose state was created by
+`Azure/avm-res-network-bastionhost/azurerm` **v0.6.0 or earlier** AND who sets
+`sku = "Developer"`. Every other combination upgrades in place.
 
-- Keep a `provider "azurerm" { features {} }` block in your root configuration
-  whenever this module creates a public IP (`ip_configuration.create_public_ip`
-  defaults to `true`). AzureRM will not initialise without a `features` block,
-  and Terraform cannot synthesise one.
-- The effective version floor dropped from `>= 4.10` to `>= 3.116`. If you rely
-  on an azurerm 4.x feature, pin it in your own root `required_providers`.
+**What happens:** `terraform plan` shows the Bastion host **destroyed and
+recreated**, not moved. The host's public endpoint and its resource ID change,
+and connectivity is interrupted for the duration of the recreate.
+
+**Why it cannot be fixed here:** Terraform permits each `moved` *source* address
+exactly one destination. `azurerm_bastion_host.this` in v0.6.0 has no `count`,
+so it is a single instance with a single move slot, while this release has two
+mutually exclusive writers — `azapi_resource.bastion[0]` and
+`azapi_resource.bastion_developer[0]`. The slot is allocated to
+`azapi_resource.bastion[0]`, the non-Developer path. A second `moved` block from the same source is a
+static plan-time error (`Ambiguous move statements`), not a runtime choice, so
+both cohorts cannot be served. `terraform state mv` is not an escape either: it
+refuses to move state between different resource types.
+
+**This break is inherited, not introduced.** Upstream v0.7.0 already replaced
+`azurerm_bastion_host` with `azapi_resource` and shipped **no** `moved` blocks at
+all, so this path was already broken in 2025 and no declarative move can reclaim
+it. This release repairs three of the four cohorts; it cannot repair the fourth.
+
+**What to do:** accept the recreate during a maintenance window, or upgrade to
+v0.7.0–v0.9.0 first — this release keeps the upstream resource labels, so from
+v0.7.0–v0.9.0 the Developer path needs no state move at all and upgrades in
+place.
+
+### `hashicorp/azurerm` is no longer required at all
+
+This module is AzAPI-only, in its own code **and** in its dependency graph.
+`terraform init` installs `Azure/azapi`, `azure/modtm` and `hashicorp/random`
+and nothing else; `hashicorp/azurerm` does not appear in `.terraform.lock.hcl`.
+
+The last AzureRM dependency was `module.public_ip_address`
+(`Azure/avm-res-network-publicipaddress/azurerm`), which carried
+`azurerm >= 3.116, < 5.0` in its own `required_providers`. Its AzAPI version is
+AzAPI-only, so that requirement is gone and with it the widened floor that
+earlier notes described.
+
+Two consequences for a consumer:
+
+- **You may delete `provider "azurerm" { features {} }` from your root
+  configuration**, if it was there only for this module. It is no longer needed
+  even when this module creates a public IP.
+- **The public IP module's own input changed.** The AzAPI version deleted
+  `resource_group_name` and replaced it with a required `parent_id` taking the
+  fully-qualified resource-group ID. This module absorbs that internally — it
+  forwards its own `var.parent_id` — so nothing in *your* configuration changes.
 
 ## AVM Versioning Notice
 
@@ -118,13 +155,13 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azapi_resource.developer](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.bastion](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.bastion_developer](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.diagnostic_settings](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.lock](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.lock_public_ip](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.role_assignments](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.role_assignments_public_ip](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
@@ -553,9 +590,9 @@ Version: 0.6.0
 
 ### <a name="module_public_ip_address"></a> [public\_ip\_address](#module\_public\_ip\_address)
 
-Source: Azure/avm-res-network-publicipaddress/azurerm
+Source: git::https://github.com/Git-PrinceNagar/terraform-azurerm-avm-res-network-publicipaddress.git
 
-Version: 0.2.0
+Version: c9f4bd6951e8b9bc8c8ec3fe8a5975b1def750d4
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
