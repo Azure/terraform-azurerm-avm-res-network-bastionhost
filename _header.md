@@ -69,11 +69,13 @@ module "azure_bastion" {
 
 ## Upgrading from an AzureRM release
 
-This module is built on `Azure/azapi`. Upgrading from any earlier release moves
-state onto the AzAPI resources through in-module `moved` blocks, so a consumer
-bumps the module version and changes nothing else. Plan with a normal refresh:
-`terraform plan -refresh=false` hits [azapi#1227](https://github.com/Azure/terraform-provider-azapi/issues/1227)
-and misreports the moves as replacements.
+This module is built on `Azure/azapi`. Most existing deployments move state to
+the AzAPI resources through in-module `moved` blocks. A deployment created with
+v0.6.0 or earlier and `sku = "Developer"` is an exception and recreates the
+Bastion host. See the breaking-change note below.
+
+Plan the upgrade with Terraform's default refresh. Review the plan before
+applying it, especially if the deployment uses the affected Developer SKU path.
 
 One cohort cannot be carried across declaratively: a deployment created at
 **v0.6.0 or earlier with `sku = "Developer"`**. Terraform allows each source
@@ -81,10 +83,10 @@ address exactly one `moved` destination, and `azurerm_bastion_host.this` had no
 `count`, so its single slot is spent on the non-Developer path. Those
 deployments see a destroy and recreate.
 
-### BREAKING CHANGE — `sku = "Developer"` upgraded from v0.6.0 or earlier
+### Breaking change: `sku = "Developer"` upgraded from v0.6.0 or earlier
 
 **Who is affected:** only a consumer whose state was created by
-`Azure/avm-res-network-bastionhost/azurerm` **v0.6.0 or earlier** AND who sets
+`Azure/avm-res-network-bastionhost/azurerm` **v0.6.0 or earlier** and who sets
 `sku = "Developer"`. Every other combination upgrades in place.
 
 **What happens:** `terraform plan` shows the Bastion host **destroyed and
@@ -93,8 +95,8 @@ and connectivity is interrupted for the duration of the recreate.
 
 **Why it cannot be fixed here:** Terraform permits each `moved` *source* address
 exactly one destination. `azurerm_bastion_host.this` in v0.6.0 has no `count`,
-so it is a single instance with a single move slot, while this release has two
-mutually exclusive writers — `azapi_resource.bastion[0]` and
+so it is a single instance with a single move slot. This release has two
+mutually exclusive writers: `azapi_resource.bastion[0]` and
 `azapi_resource.bastion_developer[0]`. The slot is allocated to
 `azapi_resource.bastion[0]`, the non-Developer path. A second `moved` block from the same source is a
 static plan-time error (`Ambiguous move statements`), not a runtime choice, so
@@ -107,9 +109,9 @@ all, so this path was already broken in 2025 and no declarative move can reclaim
 it. This release repairs three of the four cohorts; it cannot repair the fourth.
 
 **What to do:** accept the recreate during a maintenance window, or upgrade to
-v0.7.0–v0.9.0 first — this release keeps the upstream resource labels, so from
-v0.7.0–v0.9.0 the Developer path needs no state move at all and upgrades in
-place.
+v0.7.0 through v0.9.0 first. This release keeps the upstream resource labels,
+so the Developer path needs no state move and upgrades in place when upgrading
+from those versions.
 
 ### `hashicorp/azurerm` is no longer required at all
 
@@ -130,8 +132,8 @@ Two consequences for a consumer:
   even when this module creates a public IP.
 - **The public IP module's own input changed.** The AzAPI version deleted
   `resource_group_name` and replaced it with a required `parent_id` taking the
-  fully-qualified resource-group ID. This module absorbs that internally — it
-  forwards its own `var.parent_id` — so nothing in *your* configuration changes.
+  fully-qualified resource-group ID. This module absorbs that internally. It
+  forwards its own `var.parent_id`, so nothing in *your* configuration changes.
 
 
 ## AVM Versioning Notice
