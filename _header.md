@@ -108,10 +108,15 @@ refuses to move state between different resource types.
 all, so this path was already broken in 2025 and no declarative move can reclaim
 it. This release repairs three of the four cohorts; it cannot repair the fourth.
 
-**What to do:** accept the recreate during a maintenance window, or upgrade to
-v0.7.0 through v0.9.0 first. This release keeps the upstream resource labels,
-so the Developer path needs no state move and upgrades in place when upgrading
-from those versions.
+**What to do:** for a Developer deployment still on v0.6.0 or earlier, plan for
+the recreate during a maintenance window. Upgrading through v0.7.0 to v0.9.0
+first is not a documented way to avoid it, and that staged route has not been
+validated here.
+
+Developer deployments **already on v0.7.0 through v0.9.0** retain the upstream
+`azapi_resource.bastion_developer[0]` address and can upgrade to this release
+in place without a Bastion state move. This does not establish a safe staged
+upgrade from v0.6.0 or earlier.
 
 ### `hashicorp/azurerm` is no longer required at all
 
@@ -135,6 +140,17 @@ Two consequences for a consumer:
   fully-qualified resource-group ID. This module absorbs that internally. It
   forwards its own `var.parent_id`, so nothing in *your* configuration changes.
 
+
+## Local regression tests
+
+Run the provider-mocked Terraform suite with `avm test unit`, then run
+`pwsh -File tests/unit/check_public_ip_controls.ps1` from the module root.
+The second command checks rendered child resource types, retries and timeouts,
+plus the explicit binding for the write-only child ignore-path input.
+
+The override fixture uses fresh state because the pinned child's create writer
+retains its original configuration after creation. These checks do not prove
+live state moves, Azure drift behavior, or a staged Developer upgrade.
 
 ## AVM Versioning Notice
 

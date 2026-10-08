@@ -61,6 +61,12 @@ variable "ignore_body_changes" {
     authorization_role_assignments = optional(list(string), [])
     insights_diagnostic_settings   = optional(list(string), [])
     network_bastion_hosts          = optional(list(string), [])
+    public_ip_address = optional(object({
+      network_public_ip_addresses    = optional(list(string), [])
+      authorization_locks            = optional(list(string), [])
+      authorization_role_assignments = optional(list(string), [])
+      insights_diagnostic_settings   = optional(list(string), [])
+    }), {})
   })
   default     = {}
   description = <<DESCRIPTION
@@ -70,6 +76,13 @@ variable "ignore_body_changes" {
 - `authorization_role_assignments` - (Optional) Ignored body paths for the role assignments, for example `["properties.description"]`. Default `[]`.
 - `insights_diagnostic_settings` - (Optional) Ignored body paths for the Bastion host diagnostic settings, for example `["properties.logs"]`. Default `[]`.
 - `network_bastion_hosts` - (Optional) Ignored body paths for the Bastion host itself, for example `["properties.scaleUnits"]`. Default `[]`. Applies to BOTH Bastion writers -- the Developer SKU is a separate `azapi_resource` of the same ARM type and only one of the two exists for any given `sku`.
+- `public_ip_address` - (Optional) Child-scoped paths passed unchanged to the module-created public IP. This slot uses the module call's name to remain separate from the supplied-IP READ type setting.
+- `public_ip_address.network_public_ip_addresses` - Ignored paths for the child's public IP create writer. Default `[]`. The pinned child does not support `ignore_body_changes` on its day-2 merge writer.
+- `public_ip_address.authorization_locks` - Ignored paths for locks owned by the child. Default `[]`.
+- `public_ip_address.authorization_role_assignments` - Ignored paths for role assignments owned by the child. Default `[]`.
+- `public_ip_address.insights_diagnostic_settings` - Ignored paths for diagnostic settings owned by the child. Default `[]`.
+
+The Bastion module's public-IP lock and role assignments remain parent-owned and use the top-level `authorization_locks` and `authorization_role_assignments` lists, not the child slot.
 
 Paths are body-relative dot notation and cannot target list indices. While a path is ignored, configuration changes at that path are no longer sent to Azure. The value is write-only provider state, so a change only takes effect after an `apply`, and supplying a non-empty list requires Terraform 1.11 or later.
 
@@ -206,6 +219,13 @@ variable "resource_types" {
     insights_diagnostic_settings   = optional(string, "Microsoft.Insights/diagnosticSettings@2021-05-01-preview")
     network_bastion_hosts          = optional(string, "Microsoft.Network/bastionHosts@2024-05-01")
     network_public_ip_addresses    = optional(string, "Microsoft.Network/publicIPAddresses@2024-05-01")
+    public_ip_address = optional(object({
+      network_public_ip_addresses    = optional(string)
+      authorization_locks            = optional(string)
+      authorization_role_assignments = optional(string)
+      insights_diagnostic_settings   = optional(string)
+      resources_tags                 = optional(string)
+    }), {})
   })
   default     = {}
   description = <<DESCRIPTION
@@ -216,6 +236,14 @@ variable "resource_types" {
 - `insights_diagnostic_settings` - (Optional) The type and API version of the diagnostic settings. Default `Microsoft.Insights/diagnosticSettings@2021-05-01-preview`, which is both the value `Azure/avm-utl-interfaces/azure` 0.6.0 emits and the version `hashicorp/azurerm` v4.81.0 used.
 - `network_bastion_hosts` - (Optional) The type and API version of the Bastion host. Default `Microsoft.Network/bastionHosts@2024-05-01`, carried forward unchanged from this module's v0.9.0 so that an upgrade is not silently also an API-version bump. Applies to BOTH Bastion writers.
 - `network_public_ip_addresses` - (Optional) The type and API version used to READ an existing public IP supplied through `ip_configuration.public_ip_address_id`. Nothing is written at this type; the module-created public IP is owned by `Azure/avm-res-network-publicipaddress/azurerm`.
+- `public_ip_address` - (Optional) Resource-type overrides passed unchanged to the module-created public IP. This slot uses the module call's name because `network_public_ip_addresses` already controls the supplied-IP READ and retains its existing string contract. Omitted or `null` inner fields use the child's tested defaults.
+- `public_ip_address.network_public_ip_addresses` - Type and API version for the child public IP writers.
+- `public_ip_address.authorization_locks` - Type and API version for child-owned locks.
+- `public_ip_address.authorization_role_assignments` - Type and API version for child-owned role assignments.
+- `public_ip_address.insights_diagnostic_settings` - Type and API version for child-owned diagnostic settings.
+- `public_ip_address.resources_tags` - Type and API version for the child's tag replacement action.
+
+Public-IP locks and role assignments created directly by this Bastion module still use the top-level `authorization_locks` and `authorization_role_assignments` types.
 
 > 🔴 Changing any WRITE key on an EXISTING deployment is a breaking change, not a routine bump. `type` is not a replacement trigger on `azapi_resource` (azapi 2.13.0 `azapi_resource.go` declares no `RequiresReplace` on it) and it carries no `skip_on:"update"` tag either, so a changed value forces a full PUT rather than replacing the resource. Plan it, read it, and do not apply it casually.
 >
@@ -231,7 +259,7 @@ variable "retry" {
     max_interval_seconds = optional(number, 180)
   })
   default     = {}
-  description = "(Optional) Retry configuration for the resource operations."
+  description = "(Optional) Retry configuration for the resource operations, passed unchanged to the module-created public IP as well. The Bastion module defaults apply to both scopes; passing null delegates to the provider or child defaults."
 }
 
 variable "scale_units" {
@@ -296,7 +324,7 @@ variable "timeouts" {
 - `update` - (Optional) Timeout for update operations.
 - `delete` - (Optional) Timeout for delete operations.
 
-The shape is the flat TFFR7 one, so a parent module can cascade `timeouts = var.timeouts` through unchanged.
+The shape is the flat TFFR7 one. Values are passed unchanged to the module-created public IP, which applies its own per-resource fallbacks for unset attributes.
 
 An attribute left unset does NOT fall back to a single blanket value. It falls back PER RESOURCE to the timeout default of the `hashicorp/azurerm` v4.81.0 resource that resource replaced, so a migrated deployment keeps the timeouts it had. The fallbacks and their sources are in `local.timeouts` in `locals.tf`:
 

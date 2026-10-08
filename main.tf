@@ -267,15 +267,19 @@ module "public_ip_address" {
   # the fully-qualified resource-group ID directly, so the decomposition is gone
   # entirely and `var.parent_id` -- already TFNFR38-validated here -- is forwarded
   # unchanged. TFRMFR1: a resource module takes its parent scope as an ID.
-  parent_id        = var.parent_id
-  enable_telemetry = var.enable_telemetry
-  sku              = "Standard"
+  parent_id           = var.parent_id
+  enable_telemetry    = var.enable_telemetry
+  ignore_body_changes = var.ignore_body_changes.public_ip_address
+  resource_types      = var.resource_types.public_ip_address
+  retry               = var.retry
+  sku                 = "Standard"
   tags = var.ip_configuration.public_ip_tags != null ? (
     var.ip_configuration.public_ip_merge_with_module_tags) ? merge(
     var.tags, var.ip_configuration.public_ip_tags) : (
     var.ip_configuration.public_ip_tags) : (
   var.ip_configuration.public_ip_merge_with_module_tags) ? var.tags : {}
-  zones = [for zone in var.zones : parseint(zone, 10)]
+  timeouts = var.timeouts
+  zones    = [for zone in var.zones : parseint(zone, 10)]
 }
 
 # Reads a public IP the consumer supplied through

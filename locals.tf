@@ -122,6 +122,7 @@ locals {
   # reconcile, so every list is collapsed at the boundary instead of at each use site.
   ignore_body_changes = {
     for key, paths in var.ignore_body_changes : key => length(paths) > 0 ? paths : null
+    if key != "public_ip_address"
   }
 }
 
