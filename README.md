@@ -159,6 +159,13 @@ The override fixture uses fresh state because the pinned child's create writer
 retains its original configuration after creation. These checks do not prove
 live state moves, Azure drift behavior, or a staged Developer upgrade.
 
+For an owned-Public-IP live convergence check, save two consecutive refreshed
+plans after apply and export each with `terraform show -json`. Run
+`tests/unit/check_bastion_convergence.ps1 -PlanPaths @("replan-1.json", "replan-2.json")`
+in PowerShell. It requires a Bastion host and its owned Public IP in each plan,
+and rejects any pending resource or output action, including an output-only
+Public IP update. Provider mocks do not exercise AzAPI's custom output planning.
+
 ## AVM Versioning Notice
 
 Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
@@ -645,7 +652,7 @@ Version: 0.6.0
 
 Source: git::https://github.com/Git-PrinceNagar/terraform-azurerm-avm-res-network-publicipaddress.git
 
-Version: c9f4bd6951e8b9bc8c8ec3fe8a5975b1def750d4
+Version: 38014e6831db544cad1105e33b9f4bfebcb36dab
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

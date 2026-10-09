@@ -257,7 +257,7 @@ moved {
 # -----------------------------------------------------------------------------
 module "public_ip_address" {
   # tflint-ignore: avm_terraform_module_source_required // pre-release candidate pinned to an immutable commit; reverts to the registry source on release
-  source = "git::https://github.com/Git-PrinceNagar/terraform-azurerm-avm-res-network-publicipaddress.git?ref=c9f4bd6951e8b9bc8c8ec3fe8a5975b1def750d4"
+  source = "git::https://github.com/Git-PrinceNagar/terraform-azurerm-avm-res-network-publicipaddress.git?ref=38014e6831db544cad1105e33b9f4bfebcb36dab"
   count  = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == true ? 1 : 0) : var.sku == "Developer" ? 0 : 1
 
   location = var.location
