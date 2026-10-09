@@ -369,7 +369,7 @@ variable "virtual_network_id" {
 variable "zones" {
   type        = set(string)
   default     = ["1", "2", "3"]
-  description = "The availability zones where the Azure Bastion Host is deployed."
+  description = "The availability zones where the Azure Bastion Host is deployed. Defaults to all three zones for zone redundancy. Bastion availability-zone support is region-specific; set zones = [] in regions that do not support zonal Bastion deployments, and for the Developer SKU. Zone settings cannot be changed after deployment. See https://learn.microsoft.com/azure/bastion/configuration-settings#availability-zones."
 
   validation {
     condition     = (length(var.zones) >= 0 && var.sku != "Developer") || length(var.zones) == 0 && var.sku == "Developer"

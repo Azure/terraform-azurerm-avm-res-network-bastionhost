@@ -10,6 +10,13 @@ To use this module in your Terraform configuration, you'll need to provide value
 
 The module supports the `Developer`, `Basic`, `Standard` and `Premium` SKU's for Azure Bastion.
 
+Availability zones default to `["1", "2", "3"]`. Bastion zone support is
+region-specific, even where other Azure services support zones. Set `zones = []`
+for a region without zonal Bastion support, and for the Developer SKU.
+Choose zones at creation time; Azure does not support changing them after
+deployment. Check the current [Bastion availability-zone regions](https://learn.microsoft.com/azure/bastion/configuration-settings#availability-zones)
+before deploying.
+
 ## Example Usage
 
 Here is an example of how you can use this module in your Terraform configuration:
@@ -584,7 +591,7 @@ Default: `null`
 
 ### <a name="input_zones"></a> [zones](#input\_zones)
 
-Description: The availability zones where the Azure Bastion Host is deployed.
+Description: The availability zones where the Azure Bastion Host is deployed. Defaults to all three zones for zone redundancy. Bastion availability-zone support is region-specific; set zones = [] in regions that do not support zonal Bastion deployments, and for the Developer SKU. Zone settings cannot be changed after deployment. See https://learn.microsoft.com/azure/bastion/configuration-settings#availability-zones.
 
 Type: `set(string)`
 
