@@ -11,11 +11,7 @@ terraform {
   required_providers {
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 2.0"
-    }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.10"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
@@ -24,24 +20,36 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {}
-}
-
 provider "azapi" {
 
 }
 
-## Section to provide a random Azure region for the resource group
-# This allows us to randomize the region for the resource group.
-module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "= 0.8.2"
+## Section to provide a random Azure region for the resource group.
+#
+# 🔴 REPLACES `module "regions"` (`Azure/regions/azurerm` 0.8.2). That module is not
+# AzAPI-only: it declares `hashicorp/azurerm >= 3.74.0` in its own `required_providers`
+# and reads `data "azurerm_client_config" "current"` to build the resource IDs it
+# returns. Keeping it would have kept a live `azurerm` data source in this example.
+#
+# The hardcoded list below is the same one the other four examples already use, so the
+# repository is now consistent, and it is a NARROWING: the old code picked uniformly
+# from every region the subscription can see, whereas Bastion Developer SKU is offered
+# in a subset. Narrow this list further if a Developer deployment is rejected in one of
+# these regions.
+locals {
+  regions = [
+    "Canada Central", "North Europe", "South Africa North", "Australia East",
+    "Central US", "Sweden Central", "Israel Central", "Korea Central",
+    "East US", "UK South",
+    "East US 2", "West Europe",
+    "West US 2", "Norway East", "Italy North",
+    "Mexico Central", "Spain Central"
+  ]
 }
 
 # This allows us to randomize the region for the resource group.
 resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
+  max = length(local.regions) - 1
   min = 0
 }
 
@@ -52,17 +60,24 @@ module "naming" {
   version = "= 0.4.2"
 }
 
-resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
-  name     = module.naming.resource_group.name_unique
+# Supplies the subscription ID that the resource group below hangs off. Replaces
+# `data.azurerm_client_config`, which the AzureRM resource group did not need only
+# because AzureRM took the subscription implicitly from its provider block.
+data "azapi_client_config" "current" {}
+
+resource "azapi_resource" "rg" {
+  location  = element(local.regions, random_integer.region_index.result)
+  name      = module.naming.resource_group.name_unique
+  parent_id = "/subscriptions/${data.azapi_client_config.current.subscription_id}"
+  type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 }
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "= 0.15.0"
+  version = "= 0.22.2"
 
-  location         = azurerm_resource_group.this.location
-  parent_id        = azurerm_resource_group.this.id
+  location         = azapi_resource.rg.location
+  parent_id        = azapi_resource.rg.id
   address_space    = ["10.0.0.0/16"]
   enable_telemetry = var.enable_telemetry
   name             = module.naming.virtual_network.name_unique
@@ -71,9 +86,9 @@ module "virtualnetwork" {
 module "azure_bastion" {
   source = "../../"
 
-  location         = azurerm_resource_group.this.location
+  location         = azapi_resource.rg.location
   name             = module.naming.bastion_host.name_unique
-  parent_id        = azurerm_resource_group.this.id
+  parent_id        = azapi_resource.rg.id
   enable_telemetry = var.enable_telemetry
   sku              = "Developer"
   tags = {
@@ -91,9 +106,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
-
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -101,8 +114,9 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azapi_resource.rg](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -151,17 +165,11 @@ Source: Azure/naming/azurerm
 
 Version: = 0.4.2
 
-### <a name="module_regions"></a> [regions](#module\_regions)
-
-Source: Azure/regions/azurerm
-
-Version: = 0.8.2
-
 ### <a name="module_virtualnetwork"></a> [virtualnetwork](#module\_virtualnetwork)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: = 0.15.0
+Version: = 0.22.2
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

@@ -10,25 +10,54 @@ To use this module in your Terraform configuration, you'll need to provide value
 
 The module supports the `Developer`, `Basic`, `Standard` and `Premium` SKU's for Azure Bastion.
 
+Availability zones default to `["1", "2", "3"]`. Bastion zone support is
+region-specific, even where other Azure services support zones. Set `zones = []`
+for a region without zonal Bastion support, and for the Developer SKU.
+Choose zones at creation time; Azure does not support changing them after
+deployment. Check the current [Bastion availability-zone regions](https://learn.microsoft.com/azure/bastion/configuration-settings#availability-zones)
+before deploying.
+
 ## Example Usage
 
 Here is an example of how you can use this module in your Terraform configuration:
 
 ```terraform
+resource "azapi_resource" "rg" {
+  type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+  parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+  name      = "rg-bastion-example"
+  location  = "westeurope"
+}
+
+resource "azapi_resource" "example_public_ip" {
+  type      = "Microsoft.Network/publicIPAddresses@2024-05-01"
+  parent_id = azapi_resource.rg.id
+  name      = "pip-bastion-example"
+  location  = azapi_resource.rg.location
+  body = {
+    sku   = { name = "Standard" }
+    zones = ["1", "2", "3"]
+    properties = {
+      publicIPAllocationMethod = "Static"
+    }
+  }
+}
+
 module "azure_bastion" {
   source = "Azure/avm-res-network-bastionhost/azurerm"
 
-  enable_telemetry    = true
-  name                = module.naming.bastion_host.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-  copy_paste_enabled  = true
-  file_copy_enabled   = false
-  sku                 = "Standard"
+  enable_telemetry   = true
+  name               = "bas-example"
+  parent_id          = azapi_resource.rg.id
+  location           = azapi_resource.rg.location
+  copy_paste_enabled = true
+  file_copy_enabled  = false
+  sku                = "Standard"
   ip_configuration = {
     name                 = "my-ipconfig"
     subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
-    public_ip_address_id = azurerm_public_ip.example.id
+    public_ip_address_id = azapi_resource.example_public_ip.id
+    create_public_ip     = false
   }
   ip_connect_enabled     = true
   scale_units            = 4
@@ -41,6 +70,101 @@ module "azure_bastion" {
   }
 }
 ```
+
+> The zones on a public IP you supply yourself must match the Bastion host's
+> `zones` (default `["1", "2", "3"]`). The module enforces that with a
+> `lifecycle.precondition` rather than letting ARM reject the deployment.
+
+## Upgrading from an AzureRM release
+
+This module is built on `Azure/azapi`. Most existing deployments move state to
+the AzAPI resources through in-module `moved` blocks. A deployment created with
+v0.6.0 or earlier and `sku = "Developer"` is an exception and recreates the
+Bastion host. See the breaking-change note below.
+
+Plan the upgrade with Terraform's default refresh. Review the plan before
+applying it, especially if the deployment uses the affected Developer SKU path.
+
+One cohort cannot be carried across declaratively: a deployment created at
+**v0.6.0 or earlier with `sku = "Developer"`**. Terraform allows each source
+address exactly one `moved` destination, and `azurerm_bastion_host.this` had no
+`count`, so its single slot is spent on the non-Developer path. Those
+deployments see a destroy and recreate.
+
+### Breaking change: `sku = "Developer"` upgraded from v0.6.0 or earlier
+
+**Who is affected:** only a consumer whose state was created by
+`Azure/avm-res-network-bastionhost/azurerm` **v0.6.0 or earlier** and who sets
+`sku = "Developer"`. Every other combination upgrades in place.
+
+**What happens:** `terraform plan` shows the Bastion host **destroyed and
+recreated**, not moved. The host's public endpoint and its resource ID change,
+and connectivity is interrupted for the duration of the recreate.
+
+**Why it cannot be fixed here:** Terraform permits each `moved` *source* address
+exactly one destination. `azurerm_bastion_host.this` in v0.6.0 has no `count`,
+so it is a single instance with a single move slot. This release has two
+mutually exclusive writers: `azapi_resource.bastion[0]` and
+`azapi_resource.bastion_developer[0]`. The slot is allocated to
+`azapi_resource.bastion[0]`, the non-Developer path. A second `moved` block from the same source is a
+static plan-time error (`Ambiguous move statements`), not a runtime choice, so
+both cohorts cannot be served. `terraform state mv` is not an escape either: it
+refuses to move state between different resource types.
+
+**This break is inherited, not introduced.** Upstream v0.7.0 already replaced
+`azurerm_bastion_host` with `azapi_resource` and shipped **no** `moved` blocks at
+all, so this path was already broken in 2025 and no declarative move can reclaim
+it. This release repairs three of the four cohorts; it cannot repair the fourth.
+
+**What to do:** for a Developer deployment still on v0.6.0 or earlier, plan for
+the recreate during a maintenance window. Upgrading through v0.7.0 to v0.9.0
+first is not a documented way to avoid it, and that staged route has not been
+validated here.
+
+Developer deployments **already on v0.7.0 through v0.9.0** retain the upstream
+`azapi_resource.bastion_developer[0]` address and can upgrade to this release
+in place without a Bastion state move. This does not establish a safe staged
+upgrade from v0.6.0 or earlier.
+
+### `hashicorp/azurerm` is no longer required at all
+
+This module is AzAPI-only, in its own code **and** in its dependency graph.
+`terraform init` installs `Azure/azapi`, `azure/modtm` and `hashicorp/random`
+and nothing else; `hashicorp/azurerm` does not appear in `.terraform.lock.hcl`.
+
+The last AzureRM dependency was `module.public_ip_address`
+(`Azure/avm-res-network-publicipaddress/azurerm`), which carried
+`azurerm >= 3.116, < 5.0` in its own `required_providers`. Its AzAPI version is
+AzAPI-only, so that requirement is gone and with it the widened floor that
+earlier notes described.
+
+Two consequences for a consumer:
+
+- **You may delete `provider "azurerm" { features {} }` from your root
+  configuration**, if it was there only for this module. It is no longer needed
+  even when this module creates a public IP.
+- **The public IP module's own input changed.** The AzAPI version deleted
+  `resource_group_name` and replaced it with a required `parent_id` taking the
+  fully-qualified resource-group ID. This module absorbs that internally. It
+  forwards its own `var.parent_id`, so nothing in *your* configuration changes.
+
+## Local regression tests
+
+Run the provider-mocked Terraform suite with `avm test unit`, then run
+`pwsh -File tests/unit/check_public_ip_controls.ps1` from the module root.
+The second command checks rendered child resource types, retries and timeouts,
+plus the explicit binding for the write-only child ignore-path input.
+
+The override fixture uses fresh state because the pinned child's create writer
+retains its original configuration after creation. These checks do not prove
+live state moves, Azure drift behavior, or a staged Developer upgrade.
+
+For an owned-Public-IP live convergence check, save two consecutive refreshed
+plans after apply and export each with `terraform show -json`. Run
+`tests/unit/check_bastion_convergence.ps1 -PlanPaths @("replan-1.json", "replan-2.json")`
+in PowerShell. It requires a Bastion host and its owned Public IP in each plan,
+and rejects any pending resource or output action, including an output-only
+Public IP update. Provider mocks do not exercise AzAPI's custom output planning.
 
 ## AVM Versioning Notice
 
@@ -55,8 +179,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
-
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
@@ -67,15 +189,15 @@ The following resources are used by this module:
 
 - [azapi_resource.bastion](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.bastion_developer](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azurerm_management_lock.pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
-- [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
-- [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
-- [azurerm_role_assignment.pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azapi_resource.diagnostic_settings](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.lock](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.lock_public_ip](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.role_assignments](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.role_assignments_public_ip](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
-- [azurerm_public_ip.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/public_ip) (data source)
+- [azapi_resource.public_ip](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -138,6 +260,8 @@ diagnostic_settings = {
 }
 ```
 
+> ⚠️ `log_analytics_destination_type` IS SENT AGAIN AS OF THIS RELEASE. v0.6.0 passed it to `azurerm_monitor_diagnostic_setting`; v0.7.0 dropped the argument while keeping the variable, so between v0.7.0 and v0.9.0 the documented default `Dedicated` was silently discarded and ARM applied its own default. Composing the interface through `Azure/avm-utl-interfaces/azure` restores the v0.6.0 behaviour. A deployment created on v0.7.0-v0.9.0 with a Log Analytics destination will therefore show ONE in-place update to `properties.logAnalyticsDestinationType` on first plan after upgrading. That is a bug fix, not a regression, and it is an update rather than a replacement.
+
 Type:
 
 ```hcl
@@ -174,6 +298,45 @@ Description: Specifies whether file copy functionality is enabled for the Azure 
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: (Optional) Body property paths whose changes the `azapi` provider ignores after creation, letting an out-of-band controller own those properties without producing perpetual `terraform plan` drift.
+
+- `authorization_locks` - (Optional) Ignored body paths for the management locks on the Bastion host and its module-created public IP, for example `["properties.notes"]`. Default `[]`.
+- `authorization_role_assignments` - (Optional) Ignored body paths for the role assignments, for example `["properties.description"]`. Default `[]`.
+- `insights_diagnostic_settings` - (Optional) Ignored body paths for the Bastion host diagnostic settings, for example `["properties.logs"]`. Default `[]`.
+- `network_bastion_hosts` - (Optional) Ignored body paths for the Bastion host itself, for example `["properties.scaleUnits"]`. Default `[]`. Applies to BOTH Bastion writers -- the Developer SKU is a separate `azapi_resource` of the same ARM type and only one of the two exists for any given `sku`.
+- `public_ip_address` - (Optional) Child-scoped paths passed unchanged to the module-created public IP. This slot uses the module call's name to remain separate from the supplied-IP READ type setting.
+- `public_ip_address.network_public_ip_addresses` - Ignored paths for the child's public IP create writer. Default `[]`. The pinned child does not support `ignore_body_changes` on its day-2 merge writer.
+- `public_ip_address.authorization_locks` - Ignored paths for locks owned by the child. Default `[]`.
+- `public_ip_address.authorization_role_assignments` - Ignored paths for role assignments owned by the child. Default `[]`.
+- `public_ip_address.insights_diagnostic_settings` - Ignored paths for diagnostic settings owned by the child. Default `[]`.
+
+The Bastion module's public-IP lock and role assignments remain parent-owned and use the top-level `authorization_locks` and `authorization_role_assignments` lists, not the child slot.
+
+Paths are body-relative dot notation and cannot target list indices. While a path is ignored, configuration changes at that path are no longer sent to Azure. The value is write-only provider state, so a change only takes effect after an `apply`, and supplying a non-empty list requires Terraform 1.11 or later.
+
+> Note: empty lists are collapsed to `null` before reaching the resource, because `azapi_resource` treats `[]` and `null` differently and only `null` means "ignore nothing".
+
+Type:
+
+```hcl
+object({
+    authorization_locks            = optional(list(string), [])
+    authorization_role_assignments = optional(list(string), [])
+    insights_diagnostic_settings   = optional(list(string), [])
+    network_bastion_hosts          = optional(list(string), [])
+    public_ip_address = optional(object({
+      network_public_ip_addresses    = optional(list(string), [])
+      authorization_locks            = optional(list(string), [])
+      authorization_role_assignments = optional(list(string), [])
+      insights_diagnostic_settings   = optional(list(string), [])
+    }), {})
+  })
+```
+
+Default: `{}`
 
 ### <a name="input_ip_configuration"></a> [ip\_configuration](#input\_ip\_configuration)
 
@@ -224,13 +387,15 @@ Description: Controls the Resource Lock configuration for this resource. The fol
 
 - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
 - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+- `notes` - (Optional) The notes recorded on the lock. If not specified, the AzureRM-era default for the `kind` is used -- `\"Cannot delete the resource or its child resources.\"` for `CanNotDelete`, `\"Cannot delete or modify the resource or its child resources.\"` for `ReadOnly` -- so an existing lock keeps the notes it already had.
 
 Type:
 
 ```hcl
 object({
-    kind = string
-    name = optional(string, null)
+    kind  = string
+    name  = optional(string, null)
+    notes = optional(string, null)
   })
 ```
 
@@ -244,12 +409,72 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: (Optional) The Azure resource type and API version used for each resource this module reads or writes.
+
+- `authorization_locks` - (Optional) The type and API version of the management locks. Default `Microsoft.Authorization/locks@2020-05-01`, which is the value `Azure/avm-utl-interfaces/azure` 0.6.0 emits from `lock_azapi.type`.
+- `authorization_role_assignments` - (Optional) The type and API version of the role assignments. Default `Microsoft.Authorization/roleAssignments@2022-04-01`, which is the value `Azure/avm-utl-interfaces/azure` 0.6.0 emits.
+- `insights_diagnostic_settings` - (Optional) The type and API version of the diagnostic settings. Default `Microsoft.Insights/diagnosticSettings@2021-05-01-preview`, which is both the value `Azure/avm-utl-interfaces/azure` 0.6.0 emits and the version `hashicorp/azurerm` v4.81.0 used.
+- `network_bastion_hosts` - (Optional) The type and API version of the Bastion host. Default `Microsoft.Network/bastionHosts@2024-05-01`, carried forward unchanged from this module's v0.9.0 so that an upgrade is not silently also an API-version bump. Applies to BOTH Bastion writers.
+- `network_public_ip_addresses` - (Optional) The type and API version used to READ an existing public IP supplied through `ip_configuration.public_ip_address_id`. Nothing is written at this type; the module-created public IP is owned by `Azure/avm-res-network-publicipaddress/azurerm`.
+- `public_ip_address` - (Optional) Resource-type overrides passed unchanged to the module-created public IP. This slot uses the module call's name because `network_public_ip_addresses` already controls the supplied-IP READ and retains its existing string contract. Omitted or `null` inner fields use the child's tested defaults.
+- `public_ip_address.network_public_ip_addresses` - Type and API version for the child public IP writers.
+- `public_ip_address.authorization_locks` - Type and API version for child-owned locks.
+- `public_ip_address.authorization_role_assignments` - Type and API version for child-owned role assignments.
+- `public_ip_address.insights_diagnostic_settings` - Type and API version for child-owned diagnostic settings.
+- `public_ip_address.resources_tags` - Type and API version for the child's tag replacement action.
+
+Public-IP locks and role assignments created directly by this Bastion module still use the top-level `authorization_locks` and `authorization_role_assignments` types.
+
+> 🔴 Changing any WRITE key on an EXISTING deployment is a breaking change, not a routine bump. `type` is not a replacement trigger on `azapi_resource` (azapi 2.13.0 `azapi_resource.go` declares no `RequiresReplace` on it) and it carries no `skip_on:"update"` tag either, so a changed value forces a full PUT rather than replacing the resource. Plan it, read it, and do not apply it casually.
+>
+> 🔴 The interface types are configurable to satisfy the AVM target checklist, but the BODIES sent at those types come from `Azure/avm-utl-interfaces/azure` 0.6.0 and are shaped for the default API versions. Overriding a type without checking that the body still validates against the new version is on the consumer.
+
+Type:
+
+```hcl
+object({
+    authorization_locks            = optional(string, "Microsoft.Authorization/locks@2020-05-01")
+    authorization_role_assignments = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    insights_diagnostic_settings   = optional(string, "Microsoft.Insights/diagnosticSettings@2021-05-01-preview")
+    network_bastion_hosts          = optional(string, "Microsoft.Network/bastionHosts@2024-05-01")
+    network_public_ip_addresses    = optional(string, "Microsoft.Network/publicIPAddresses@2024-05-01")
+    public_ip_address = optional(object({
+      network_public_ip_addresses    = optional(string)
+      authorization_locks            = optional(string)
+      authorization_role_assignments = optional(string)
+      insights_diagnostic_settings   = optional(string)
+      resources_tags                 = optional(string)
+    }), {})
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: (Optional) Retry configuration for the resource operations, passed unchanged to the module-created public IP as well. The Bastion module defaults apply to both scopes; passing null delegates to the provider or child defaults.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+    interval_seconds     = optional(number, 10)
+    max_interval_seconds = optional(number, 180)
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
-Description: A map of role assignments to create on the <RESOURCE>. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+Description: A map of role assignments to create on the Azure Bastion Host and, when this module creates one, on its public IP address. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
 - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
 - `principal_id` - The ID of the principal to assign the role to.
+- `name` - (Optional) The name of the role assignment, which must be a lowercase GUID. If not set, a random UUID is generated. Changing this forces the creation of a new resource.
 - `description` - (Optional) The description of the role assignment.
 - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
 - `condition` - (Optional) The condition which will be used to scope the role assignment.
@@ -259,12 +484,17 @@ Description: A map of role assignments to create on the <RESOURCE>. The map key 
 
 > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
 
+> ⚠️ `skip_service_principal_aad_check` HAS NO EFFECT since this module moved to AzAPI. It mapped to an AzureRM-only client-side retry loop, not to anything on the ARM wire, and `Azure/avm-utl-interfaces/azure` 0.6.0 does not emit it. The attribute is retained so that existing configurations keep parsing; a role assignment against a freshly created service principal may now need a `depends_on` or a `time_sleep` instead. Removing it is a breaking change and is deferred to the next major.
+
+> ⚠️ `name` was ADDED by the AzAPI migration and exists for a specific reason: AzAPI addresses a role assignment by its GUID name, whereas AzureRM generated one server-side. It is the documented escape hatch for pinning an existing assignment's GUID so that an upgrade adopts rather than recreates it. The `moved` blocks in `main.interfaces.tf` already preserve every assignment this module itself created, so `name` is only needed when reconciling an assignment that arrived some other way.
+
 Type:
 
 ```hcl
 map(object({
     role_definition_id_or_name             = string
     principal_id                           = string
+    name                                   = optional(string, null)
     description                            = optional(string, null)
     skip_service_principal_aad_check       = optional(bool, false)
     condition                              = optional(string, null)
@@ -317,6 +547,39 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: (Optional) Timeouts for the resource operations. Each value is a Go duration string, for example `30m` or `1h`.
+
+- `create` - (Optional) Timeout for create operations.
+- `read`   - (Optional) Timeout for read operations.
+- `update` - (Optional) Timeout for update operations.
+- `delete` - (Optional) Timeout for delete operations.
+
+The shape is the flat TFFR7 one. Values are passed unchanged to the module-created public IP, which applies its own per-resource fallbacks for unset attributes.
+
+An attribute left unset does NOT fall back to a single blanket value. It falls back PER RESOURCE to the timeout default of the `hashicorp/azurerm` v4.81.0 resource that resource replaced, so a migrated deployment keeps the timeouts it had. The fallbacks and their sources are in `local.timeouts` in `locals.tf`:
+
+- The Bastion host - create `30m`, read `5m`, update `30m`, delete `30m` (`network/bastion_host_resource.go`).
+- The management locks - create `30m`, read `5m`, update `30m`, delete `30m` (`resource/management_lock_resource.go`; it declares no Update timeout at all because every attribute is ForceNew, so the create value is reused).
+- The role assignments - create `30m`, read `5m`, update `30m`, delete `30m` (`authorization/role_assignment_resource.go`; same, no Update timeout declared).
+- The diagnostic settings - create `30m`, read `5m`, update `30m`, delete `60m` (`monitor/monitor_diagnostic_setting_resource.go`). Note the `60m` delete, which is NOT the Bastion host's `30m`. That asymmetry is the reason the fallbacks are per resource rather than one shared object.
+
+Passing `null` is equivalent to passing `{}`: every fallback applies. `nullable = false` is deliberately NOT set here -- TFFR7 requires this variable to accept `null`, and `avm_interface_timeouts` fails the build if it is set. `local.timeouts_input` in `locals.tf` absorbs the null so the fallback table below it never has to.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_tunneling_enabled"></a> [tunneling\_enabled](#input\_tunneling\_enabled)
 
 Description: Specifies whether tunneling functionality is enabled for the Azure Bastion Host. (Native client support for SSH and RDP tunneling)
@@ -335,7 +598,7 @@ Default: `null`
 
 ### <a name="input_zones"></a> [zones](#input\_zones)
 
-Description: The availability zones where the Azure Bastion Host is deployed.
+Description: The availability zones where the Azure Bastion Host is deployed. Defaults to all three zones for zone redundancy. Bastion availability-zone support is region-specific; set zones = [] in regions that do not support zonal Bastion deployments, and for the Developer SKU. Zone settings cannot be changed after deployment. See https://learn.microsoft.com/azure/bastion/configuration-settings#availability-zones.
 
 Type: `set(string)`
 
@@ -373,11 +636,23 @@ Description: The ID of the Azure Bastion resource
 
 The following Modules are called:
 
+### <a name="module_interfaces"></a> [interfaces](#module\_interfaces)
+
+Source: Azure/avm-utl-interfaces/azure
+
+Version: 0.6.0
+
+### <a name="module_interfaces_public_ip"></a> [interfaces\_public\_ip](#module\_interfaces\_public\_ip)
+
+Source: Azure/avm-utl-interfaces/azure
+
+Version: 0.6.0
+
 ### <a name="module_public_ip_address"></a> [public\_ip\_address](#module\_public\_ip\_address)
 
-Source: Azure/avm-res-network-publicipaddress/azurerm
+Source: git::https://github.com/Git-PrinceNagar/terraform-azurerm-avm-res-network-publicipaddress.git
 
-Version: 0.2.0
+Version: 38014e6831db544cad1105e33b9f4bfebcb36dab
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

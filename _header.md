@@ -8,26 +8,54 @@ To use this module in your Terraform configuration, you'll need to provide value
 
 The module supports the `Developer`, `Basic`, `Standard` and `Premium` SKU's for Azure Bastion.
 
+Availability zones default to `["1", "2", "3"]`. Bastion zone support is
+region-specific, even where other Azure services support zones. Set `zones = []`
+for a region without zonal Bastion support, and for the Developer SKU.
+Choose zones at creation time; Azure does not support changing them after
+deployment. Check the current [Bastion availability-zone regions](https://learn.microsoft.com/azure/bastion/configuration-settings#availability-zones)
+before deploying.
 
 ## Example Usage
 
 Here is an example of how you can use this module in your Terraform configuration:
 
 ```terraform
+resource "azapi_resource" "rg" {
+  type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+  parent_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+  name      = "rg-bastion-example"
+  location  = "westeurope"
+}
+
+resource "azapi_resource" "example_public_ip" {
+  type      = "Microsoft.Network/publicIPAddresses@2024-05-01"
+  parent_id = azapi_resource.rg.id
+  name      = "pip-bastion-example"
+  location  = azapi_resource.rg.location
+  body = {
+    sku   = { name = "Standard" }
+    zones = ["1", "2", "3"]
+    properties = {
+      publicIPAllocationMethod = "Static"
+    }
+  }
+}
+
 module "azure_bastion" {
   source = "Azure/avm-res-network-bastionhost/azurerm"
 
-  enable_telemetry    = true
-  name                = module.naming.bastion_host.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
-  copy_paste_enabled  = true
-  file_copy_enabled   = false
-  sku                 = "Standard"
+  enable_telemetry   = true
+  name               = "bas-example"
+  parent_id          = azapi_resource.rg.id
+  location           = azapi_resource.rg.location
+  copy_paste_enabled = true
+  file_copy_enabled  = false
+  sku                = "Standard"
   ip_configuration = {
     name                 = "my-ipconfig"
     subnet_id            = module.virtualnetwork.subnets["AzureBastionSubnet"].resource_id
-    public_ip_address_id = azurerm_public_ip.example.id
+    public_ip_address_id = azapi_resource.example_public_ip.id
+    create_public_ip     = false
   }
   ip_connect_enabled     = true
   scale_units            = 4
@@ -40,6 +68,102 @@ module "azure_bastion" {
   }
 }
 ```
+
+> The zones on a public IP you supply yourself must match the Bastion host's
+> `zones` (default `["1", "2", "3"]`). The module enforces that with a
+> `lifecycle.precondition` rather than letting ARM reject the deployment.
+
+## Upgrading from an AzureRM release
+
+This module is built on `Azure/azapi`. Most existing deployments move state to
+the AzAPI resources through in-module `moved` blocks. A deployment created with
+v0.6.0 or earlier and `sku = "Developer"` is an exception and recreates the
+Bastion host. See the breaking-change note below.
+
+Plan the upgrade with Terraform's default refresh. Review the plan before
+applying it, especially if the deployment uses the affected Developer SKU path.
+
+One cohort cannot be carried across declaratively: a deployment created at
+**v0.6.0 or earlier with `sku = "Developer"`**. Terraform allows each source
+address exactly one `moved` destination, and `azurerm_bastion_host.this` had no
+`count`, so its single slot is spent on the non-Developer path. Those
+deployments see a destroy and recreate.
+
+### Breaking change: `sku = "Developer"` upgraded from v0.6.0 or earlier
+
+**Who is affected:** only a consumer whose state was created by
+`Azure/avm-res-network-bastionhost/azurerm` **v0.6.0 or earlier** and who sets
+`sku = "Developer"`. Every other combination upgrades in place.
+
+**What happens:** `terraform plan` shows the Bastion host **destroyed and
+recreated**, not moved. The host's public endpoint and its resource ID change,
+and connectivity is interrupted for the duration of the recreate.
+
+**Why it cannot be fixed here:** Terraform permits each `moved` *source* address
+exactly one destination. `azurerm_bastion_host.this` in v0.6.0 has no `count`,
+so it is a single instance with a single move slot. This release has two
+mutually exclusive writers: `azapi_resource.bastion[0]` and
+`azapi_resource.bastion_developer[0]`. The slot is allocated to
+`azapi_resource.bastion[0]`, the non-Developer path. A second `moved` block from the same source is a
+static plan-time error (`Ambiguous move statements`), not a runtime choice, so
+both cohorts cannot be served. `terraform state mv` is not an escape either: it
+refuses to move state between different resource types.
+
+**This break is inherited, not introduced.** Upstream v0.7.0 already replaced
+`azurerm_bastion_host` with `azapi_resource` and shipped **no** `moved` blocks at
+all, so this path was already broken in 2025 and no declarative move can reclaim
+it. This release repairs three of the four cohorts; it cannot repair the fourth.
+
+**What to do:** for a Developer deployment still on v0.6.0 or earlier, plan for
+the recreate during a maintenance window. Upgrading through v0.7.0 to v0.9.0
+first is not a documented way to avoid it, and that staged route has not been
+validated here.
+
+Developer deployments **already on v0.7.0 through v0.9.0** retain the upstream
+`azapi_resource.bastion_developer[0]` address and can upgrade to this release
+in place without a Bastion state move. This does not establish a safe staged
+upgrade from v0.6.0 or earlier.
+
+### `hashicorp/azurerm` is no longer required at all
+
+This module is AzAPI-only, in its own code **and** in its dependency graph.
+`terraform init` installs `Azure/azapi`, `azure/modtm` and `hashicorp/random`
+and nothing else; `hashicorp/azurerm` does not appear in `.terraform.lock.hcl`.
+
+The last AzureRM dependency was `module.public_ip_address`
+(`Azure/avm-res-network-publicipaddress/azurerm`), which carried
+`azurerm >= 3.116, < 5.0` in its own `required_providers`. Its AzAPI version is
+AzAPI-only, so that requirement is gone and with it the widened floor that
+earlier notes described.
+
+Two consequences for a consumer:
+
+- **You may delete `provider "azurerm" { features {} }` from your root
+  configuration**, if it was there only for this module. It is no longer needed
+  even when this module creates a public IP.
+- **The public IP module's own input changed.** The AzAPI version deleted
+  `resource_group_name` and replaced it with a required `parent_id` taking the
+  fully-qualified resource-group ID. This module absorbs that internally. It
+  forwards its own `var.parent_id`, so nothing in *your* configuration changes.
+
+
+## Local regression tests
+
+Run the provider-mocked Terraform suite with `avm test unit`, then run
+`pwsh -File tests/unit/check_public_ip_controls.ps1` from the module root.
+The second command checks rendered child resource types, retries and timeouts,
+plus the explicit binding for the write-only child ignore-path input.
+
+The override fixture uses fresh state because the pinned child's create writer
+retains its original configuration after creation. These checks do not prove
+live state moves, Azure drift behavior, or a staged Developer upgrade.
+
+For an owned-Public-IP live convergence check, save two consecutive refreshed
+plans after apply and export each with `terraform show -json`. Run
+`tests/unit/check_bastion_convergence.ps1 -PlanPaths @("replan-1.json", "replan-2.json")`
+in PowerShell. It requires a Bastion host and its owned Public IP in each plan,
+and rejects any pending resource or output action, including an output-only
+Public IP update. Provider mocks do not exercise AzAPI's custom output planning.
 
 ## AVM Versioning Notice
 
