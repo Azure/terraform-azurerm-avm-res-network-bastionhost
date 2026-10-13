@@ -8,6 +8,9 @@ To use this module in your Terraform configuration, you'll need to provide value
 
 The module supports the `Developer`, `Basic`, `Standard` and `Premium` SKU's for Azure Bastion.
 
+## Testing
+
+Run `avm test unit` for provider-mocked coverage of the supported SKUs, public IP selection, feature settings, and invalid configurations. These tests do not deploy Azure resources.
 
 ## Example Usage
 
