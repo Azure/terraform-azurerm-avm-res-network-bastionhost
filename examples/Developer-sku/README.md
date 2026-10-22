@@ -17,6 +17,7 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.10"
     }
+    # tflint-ignore: terraform_unused_required_providers
     modtm = {
       source  = "registry.terraform.io/azure/modtm"
       version = "~> 0.3"
@@ -62,9 +63,8 @@ resource "azurerm_resource_group" "this" {
 }
 
 module "virtualnetwork" {
-  source    = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version   = "= 0.15.0"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "= 0.15.0"
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
@@ -74,8 +74,7 @@ module "virtualnetwork" {
 }
 
 module "azure_bastion" {
-  source    = "../../"
-  providers = { modtm = modtm }
+  source = "../../"
 
   location         = azurerm_resource_group.this.location
   name             = module.naming.bastion_host.name_unique
