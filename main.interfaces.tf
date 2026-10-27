@@ -18,8 +18,9 @@
 
 module "interfaces" {
   source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.6.0"
+  version = "0.9.0"
 
+  location            = var.location
   diagnostic_settings = var.diagnostic_settings
   enable_telemetry    = var.enable_telemetry
   # `local.lock_utl`, not `var.lock`. This module's `lock` is the AVM interface variant 2
@@ -33,8 +34,9 @@ module "interfaces" {
 
 module "interfaces_public_ip" {
   source  = "Azure/avm-utl-interfaces/azure"
-  version = "0.6.0"
+  version = "0.9.0"
 
+  location = var.location
   # The AzureRM-era module never created diagnostic settings on the public IP, only a
   # lock and role assignments. That surface is preserved exactly.
   diagnostic_settings = {}

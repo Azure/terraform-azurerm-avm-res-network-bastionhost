@@ -24,6 +24,8 @@ mock_provider "azapi" {
   }
 }
 
+mock_provider "modtm" {}
+
 mock_provider "random" {}
 
 variables {
@@ -53,6 +55,11 @@ run "basic_creates_public_ip" {
     condition     = output.resource_id == azapi_resource.bastion[0].id && output.dns_name == "test-bastion.bastion.azure.com"
     error_message = "The resource ID and DNS output must identify the selected host."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "developer_uses_virtual_network" {
@@ -73,6 +80,11 @@ run "developer_uses_virtual_network" {
   assert {
     condition     = azapi_resource.bastion_developer[0].body.properties.virtualNetwork.id == var.virtual_network_id && output.resource_id == azapi_resource.bastion_developer[0].id
     error_message = "Developer Bastion must use the supplied virtual network and expose its own ID."
+  }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
   }
 }
 
@@ -104,6 +116,11 @@ run "standard_uses_existing_public_ip" {
     condition     = azapi_resource.bastion[0].body.properties.disableCopyPaste && azapi_resource.bastion[0].body.properties.enableFileCopy && azapi_resource.bastion[0].body.properties.enableIpConnect && azapi_resource.bastion[0].body.properties.enableKerberos && azapi_resource.bastion[0].body.properties.enableShareableLink && azapi_resource.bastion[0].body.properties.enableTunneling && azapi_resource.bastion[0].body.properties.scaleUnits == 4
     error_message = "Standard Bastion feature settings must be applied to the host."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "premium_private_only" {
@@ -128,6 +145,11 @@ run "premium_private_only" {
     condition     = azapi_resource.bastion[0].body.properties.enablePrivateOnlyBastion && azapi_resource.bastion[0].body.properties.enableSessionRecording
     error_message = "Private-only and session recording settings must be applied."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "rejects_public_ip_zone_mismatch" {
@@ -143,6 +165,11 @@ run "rejects_public_ip_zone_mismatch" {
   }
 
   expect_failures = [azapi_resource.bastion]
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "rejects_incompatible_session_recording" {
@@ -155,4 +182,9 @@ run "rejects_incompatible_session_recording" {
   }
 
   expect_failures = [var.tunneling_enabled]
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }

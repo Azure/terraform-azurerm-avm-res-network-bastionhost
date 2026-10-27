@@ -9,7 +9,15 @@ mock_provider "azapi" {
       }
     }
   }
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
 }
+
+mock_provider "modtm" {}
+
 mock_provider "random" {}
 
 override_resource {
@@ -85,6 +93,11 @@ run "resolves_role_names_through_the_lookup" {
     condition     = azapi_resource.role_assignments_public_ip["custom"].body.properties.roleDefinitionId == azapi_resource.role_assignments["custom"].body.properties.roleDefinitionId
     error_message = "The public IP assignment must send the same resolved role definition id as the host assignment."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "sends_service_principal_type_when_skip_check_is_true" {
@@ -139,6 +152,11 @@ run "sends_service_principal_type_when_skip_check_is_true" {
     condition     = azapi_resource.role_assignments_public_ip["default"].body.properties.principalType == null
     error_message = "principalType must stay unset on the public IP assignment when neither the flag nor principal_type is set."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "derives_distinct_lowercase_names" {
@@ -181,6 +199,11 @@ run "derives_distinct_lowercase_names" {
     condition     = azapi_resource.role_assignments_public_ip["first"].name != azapi_resource.role_assignments_public_ip["second"].name
     error_message = "Public IP assignments with different principals must get different derived names."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "pinned_name_is_kept_on_the_host_and_distinct_on_the_public_ip" {
@@ -218,6 +241,11 @@ run "pinned_name_is_kept_on_the_host_and_distinct_on_the_public_ip" {
     condition     = can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", azapi_resource.role_assignments_public_ip["pinned"].name))
     error_message = "The derived public IP name must be a lowercase UUIDv5."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "retries_principal_not_found_on_role_assignments_by_default" {
@@ -231,6 +259,11 @@ run "retries_principal_not_found_on_role_assignments_by_default" {
   assert {
     condition     = contains(azapi_resource.role_assignments_public_ip["custom"].retry.error_message_regex, "PrincipalNotFound")
     error_message = "The default retry must cover PrincipalNotFound on the public IP role assignment."
+  }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
   }
 }
 
@@ -252,5 +285,10 @@ run "forwards_custom_retry_to_role_assignments" {
   assert {
     condition     = azapi_resource.role_assignments_public_ip["custom"].retry.error_message_regex == tolist(["CustomTransient"])
     error_message = "A consumer retry override must reach the public IP role assignment."
+  }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
   }
 }

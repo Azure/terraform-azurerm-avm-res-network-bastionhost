@@ -4,7 +4,15 @@ mock_provider "azapi" {
       id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/bastionHosts/bastion-test"
     }
   }
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
 }
+
+mock_provider "modtm" {}
+
 mock_provider "random" {}
 
 variables {
@@ -47,5 +55,10 @@ run "apply_child_controls" {
   assert {
     condition     = length(module.public_ip_address) == 1
     error_message = "The propagation fixture must exercise the owned public IP child."
+  }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
   }
 }

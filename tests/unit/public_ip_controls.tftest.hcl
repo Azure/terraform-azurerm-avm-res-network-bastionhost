@@ -17,7 +17,15 @@ mock_provider "azapi" {
       }
     }
   }
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
 }
+
+mock_provider "modtm" {}
+
 mock_provider "random" {}
 
 variables {
@@ -48,6 +56,11 @@ run "created_ip_defaults" {
   assert {
     condition     = local.ignore_body_changes.network_bastion_hosts == null
     error_message = "Empty parent ignore paths must still collapse to null."
+  }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
   }
 }
 
@@ -101,6 +114,11 @@ run "created_ip_overrides" {
     condition     = azapi_resource.bastion[0].body.properties.ipConfigurations[0].properties.publicIPAddress.id == module.public_ip_address[0].resource_id
     error_message = "The Standard host must use the module-created public IP."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "created_ip_null_controls" {
@@ -128,6 +146,11 @@ run "created_ip_null_controls" {
   assert {
     condition     = azapi_resource.bastion[0].timeouts.create == "30m"
     error_message = "Null timeouts must retain the Bastion per-resource fallback."
+  }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
   }
 }
 
@@ -161,6 +184,11 @@ run "supplied_ip_read_type" {
     condition     = azapi_resource.bastion[0].body.properties.ipConfigurations[0].properties.publicIPAddress.id == var.ip_configuration.public_ip_address_id
     error_message = "The host must use the supplied public IP."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "premium_private_only" {
@@ -182,6 +210,11 @@ run "premium_private_only" {
   assert {
     condition     = azapi_resource.bastion[0].body.properties.ipConfigurations[0].properties.publicIPAddress == null
     error_message = "Private-only Premium must not attach a public IP."
+  }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
   }
 }
 
@@ -206,5 +239,10 @@ run "developer_without_ip_configuration" {
   assert {
     condition     = !can(azapi_resource.bastion_developer[0].body.properties.ipConfigurations)
     error_message = "Developer must not send an IP configuration."
+  }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
   }
 }
