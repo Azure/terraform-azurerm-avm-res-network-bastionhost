@@ -15,6 +15,10 @@ Choose zones at creation time; Azure does not support changing them after
 deployment. Check the current [Bastion availability-zone regions](https://learn.microsoft.com/azure/bastion/configuration-settings#availability-zones)
 before deploying.
 
+## Testing
+
+Run `avm test unit` for provider-mocked coverage of the supported SKUs, public IP selection, feature settings, and invalid configurations. These tests do not deploy Azure resources.
+
 ## Example Usage
 
 Here is an example of how you can use this module in your Terraform configuration:

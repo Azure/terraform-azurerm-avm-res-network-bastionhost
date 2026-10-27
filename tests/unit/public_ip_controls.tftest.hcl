@@ -18,7 +18,6 @@ mock_provider "azapi" {
     }
   }
 }
-mock_provider "modtm" {}
 mock_provider "random" {}
 
 variables {

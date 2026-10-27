@@ -1,5 +1,4 @@
 mock_provider "azapi" {}
-mock_provider "modtm" {}
 mock_provider "random" {}
 
 # Offline role-assignment replacement checks. The plan runs use the real AzAPI provider so that
@@ -100,7 +99,6 @@ run "seed_existing_assignment" {
   command = apply
   providers = {
     azapi  = azapi
-    modtm  = modtm
     random = random
   }
   assert {
@@ -124,7 +122,6 @@ run "real_provider_preserves_existing_guids" {
   command = plan
   providers = {
     azapi  = azapi.offline
-    modtm  = modtm
     random = random
   }
   plan_options {
@@ -152,7 +149,6 @@ run "real_provider_replaces_principal_edit_with_fresh_guids" {
   command = plan
   providers = {
     azapi  = azapi.offline
-    modtm  = modtm
     random = random
   }
   plan_options {
@@ -184,7 +180,6 @@ run "real_provider_replaces_role_edit_with_fresh_guids" {
   command = plan
   providers = {
     azapi  = azapi.offline
-    modtm  = modtm
     random = random
   }
   plan_options {
@@ -212,7 +207,6 @@ run "real_provider_replaces_delegated_identity_edit_with_fresh_guids" {
   command = plan
   providers = {
     azapi  = azapi.offline
-    modtm  = modtm
     random = random
   }
   plan_options {
@@ -241,7 +235,6 @@ run "real_provider_replaces_immutable_and_mutable_edit_with_fresh_guids" {
   command = plan
   providers = {
     azapi  = azapi.offline
-    modtm  = modtm
     random = random
   }
   plan_options {
@@ -270,7 +263,6 @@ run "real_provider_allows_description_edit" {
   command = plan
   providers = {
     azapi  = azapi.offline
-    modtm  = modtm
     random = random
   }
   plan_options {
@@ -299,7 +291,6 @@ run "real_provider_allows_condition_edit" {
   command = plan
   providers = {
     azapi  = azapi.offline
-    modtm  = modtm
     random = random
   }
   plan_options {
@@ -329,7 +320,6 @@ run "real_provider_keeps_guids_when_skip_check_adds_principal_type" {
   command = plan
   providers = {
     azapi  = azapi.offline
-    modtm  = modtm
     random = random
   }
   plan_options {
@@ -358,7 +348,6 @@ run "real_provider_accepts_equivalent_role_id_casing" {
   command = plan
   providers = {
     azapi  = azapi.offline
-    modtm  = modtm
     random = random
   }
   plan_options {
