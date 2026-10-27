@@ -55,9 +55,7 @@ module "naming" {
   version = "0.2.0"
 }
 
-# Supplies the subscription ID that the resource group below hangs off. Replaces
-# `data.azurerm_client_config`, which the AzureRM resource group did not need only
-# because AzureRM took the subscription implicitly from its provider block.
+# Supplies the subscription ID for the resource group below.
 data "azapi_client_config" "current" {}
 
 resource "azapi_resource" "rg" {
@@ -84,10 +82,8 @@ module "virtualnetwork" {
   }
 }
 
-# The zones here MUST match the Bastion host's `zones`, which defaults to
-# ["1", "2", "3"]; the module enforces that with a `lifecycle.precondition`.
-# Note the type change from the AzureRM resource: `zones` was `[1, 2, 3]` (numbers,
-# which AzureRM stringified on the wire) and the ARM payload is an array of strings.
+# The zones here must match the Bastion host's `zones`, which defaults to ["1", "2", "3"].
+# The module enforces that with a `lifecycle.precondition`. ARM takes zones as strings.
 resource "azapi_resource" "example_public_ip" {
   location  = azapi_resource.rg.location
   name      = module.naming.public_ip.name_unique

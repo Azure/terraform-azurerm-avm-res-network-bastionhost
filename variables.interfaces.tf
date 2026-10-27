@@ -54,16 +54,9 @@ DESCRIPTION
     error_message = "At least one of `workspace_resource_id`, `storage_account_resource_id`, `marketplace_partner_resource_id`, or `event_hub_authorization_rule_resource_id`, must be set."
   }
   validation {
-    # AzureRM parity, ADDED by the AzAPI migration.
-    # `monitor_diagnostic_setting_resource.go` (v4.81.0) hard-failed with "at least one
-    # type of Log or Metric must be enabled" before ever calling ARM, and the comment
-    # above that check explains why: with neither, the API "creates" the setting but then
-    # 404s on Read. AzAPI has no such guard, so a config AzureRM rejected at plan would now
-    # create an unreadable object.
-    #
-    # No previously-working configuration can trip this: `log_groups` defaults to
-    # `["allLogs"]` and `metric_categories` to `["AllMetrics"]`, so reaching the failure
-    # requires explicitly emptying all three.
+    # AzureRM rejected a setting with no log or metric enabled, because ARM creates it and then
+    # fails to read it. AzAPI has no such guard. The defaults enable `allLogs` and `AllMetrics`,
+    # so only emptying all three trips this.
     condition = alltrue(
       [
         for _, v in var.diagnostic_settings :

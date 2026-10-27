@@ -14,18 +14,8 @@ variable "parent_id" {
   description = "The ID of the resource group where the Azure Bastion Host will be deployed."
 
   validation {
-    # TFNFR38 (Severity-MUST): validate the resource ID through a LITERAL type passed to
-    # `parse_resource_id`, never a hand-rolled regex. The literal keeps the ID pinned to
-    # resource-group scope, which this module depends on in three places: it is forwarded
-    # verbatim as `parent_id` to `module.public_ip_address`, whose own TFNFR38 validation
-    # would reject anything else; `local.role_assignment_definition_scope` is this ID, so
-    # role names resolve at the resource group; and
-    # `azapi_resource.bastion.parent_id` must be the Bastion host's real ARM parent.
-    #
-    # Measured at azapi 2.13.0: `parse_resource_id("Microsoft.Resources/resourceGroups", x)`
-    # succeeds for "/subscriptions/<sub>/resourceGroups/<rg>" and FAILS for a bare
-    # "/subscriptions/<sub>", so the literal alone is enough and no extra non-empty check
-    # is needed the way it is for deeper types.
+    # The literal type keeps the ID at resource-group scope. It is forwarded as `parent_id` to the
+    # public IP module and is the scope for role definition lookups.
     condition     = can(provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", var.parent_id))
     error_message = "`parent_id` must be a resource group resource ID, for example \"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-example\"."
   }
@@ -156,15 +146,8 @@ If you want to use an existing public IP address, set create_public_ip to false 
 ERROR
   }
   validation {
-    # TFNFR38, for the two resource IDs this object carries.
-    #
-    # AzureRM parity, not a new restriction. `subnet_id` was
-    # `ValidateFunc: commonids.ValidateSubnetID` (`bastion_host_resource.go`, the
-    # `ip_configuration` block) and `public_ip_address_id` was
-    # `ValidateFunc: commonids.ValidatePublicIPAddressID`, both at v4.81.0, so a malformed
-    # ID failed at plan and never reached ARM. AzAPI has no such guard, and an unvalidated
-    # `public_ip_address_id` additionally reaches `data.azapi_resource.public_ip` in
-    # `main.tf`, where a bad value would surface as an opaque 404 during refresh.
+    # AzureRM validated both IDs at plan time. AzAPI does not, and a bad `public_ip_address_id`
+    # would otherwise surface as a 404 when `data.azapi_resource.public_ip` is read.
     condition = var.ip_configuration == null ? true : (
       can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", var.ip_configuration.subnet_id)) &&
       (
@@ -366,8 +349,7 @@ variable "virtual_network_id" {
     error_message = "The virtual_network_id is required for the Developer SKU (Only). If you are trying to deploy the Developer SKU, please provide the virtual_network_id. if not, please remove it."
   }
   validation {
-    # TFNFR38. AzureRM parity: `virtual_network_id` carried
-    # `ValidateFunc: commonids.ValidateVirtualNetworkID` at v4.81.0.
+    # AzureRM validated `virtual_network_id` at plan time. AzAPI does not.
     condition     = var.virtual_network_id == null ? true : can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks", var.virtual_network_id))
     error_message = "`virtual_network_id`, when set, must be a `Microsoft.Network/virtualNetworks` resource ID."
   }

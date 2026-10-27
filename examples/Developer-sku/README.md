@@ -31,16 +31,8 @@ provider "azapi" {
 
 ## Section to provide a random Azure region for the resource group.
 #
-# 🔴 REPLACES `module "regions"` (`Azure/regions/azurerm` 0.8.2). That module is not
-# AzAPI-only: it declares `hashicorp/azurerm >= 3.74.0` in its own `required_providers`
-# and reads `data "azurerm_client_config" "current"` to build the resource IDs it
-# returns. Keeping it would have kept a live `azurerm` data source in this example.
-#
-# The hardcoded list below is the same one the other four examples already use, so the
-# repository is now consistent, and it is a NARROWING: the old code picked uniformly
-# from every region the subscription can see, whereas Bastion Developer SKU is offered
-# in a subset. Narrow this list further if a Developer deployment is rejected in one of
-# these regions.
+# Bastion Developer SKU is offered in a subset of regions. Narrow this list if a
+# deployment is rejected in one of them.
 locals {
   regions = [
     "Canada Central", "North Europe", "South Africa North", "Australia East",
@@ -65,9 +57,7 @@ module "naming" {
   version = "0.2.0"
 }
 
-# Supplies the subscription ID that the resource group below hangs off. Replaces
-# `data.azurerm_client_config`, which the AzureRM resource group did not need only
-# because AzureRM took the subscription implicitly from its provider block.
+# Supplies the subscription ID for the resource group below.
 data "azapi_client_config" "current" {}
 
 resource "azapi_resource" "rg" {

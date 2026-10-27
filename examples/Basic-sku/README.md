@@ -56,9 +56,7 @@ module "naming" {
   version = "0.2.0"
 }
 
-# Supplies the subscription ID that the resource group below hangs off. Replaces
-# `data.azurerm_client_config`, which the AzureRM resource group did not need only
-# because AzureRM took the subscription implicitly from its provider block.
+# Supplies the subscription ID for the resource group below.
 data "azapi_client_config" "current" {}
 
 resource "azapi_resource" "rg" {
