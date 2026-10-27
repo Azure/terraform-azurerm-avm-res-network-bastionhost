@@ -12,16 +12,43 @@
 # ---------------------------------------------------------------------------
 
 locals {
-  # `var.parent_id` is validated as a resource group ID in `variables.tf`, so this parse
-  # cannot fail and the members below are checked rather than assumed. Replaces the
-  # `split("/", var.parent_id)[4]` / `[2]` index arithmetic the AzureRM-era module used.
-  parent_resource_group = provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", var.parent_id)
+  # Role names are resolved at the resource group that holds the Bastion host and its owned
+  # public IP, so resource-group custom roles are found as well as inherited ones.
+  role_assignment_definition_scope = var.parent_id
 
-  # Role definitions are looked up at subscription scope, which is where AzureRM's
-  # `role_definition_name` resolution effectively pointed: `azurerm_role_assignment`
-  # (RA) resolved a role NAME against the subscription of the provider block, and a
-  # Bastion host always lives in the same subscription as its resource group.
-  role_assignment_definition_scope = "/subscriptions/${local.parent_resource_group.subscription_id}"
+  # Role assignment request bodies, one set per scope. The ids are lowercased so a casing-only
+  # change does not replace an assignment. AzureRM sent `principalType = "ServicePrincipal"`
+  # when `skip_service_principal_aad_check` was true; an explicit `principal_type` wins.
+  role_assignment_properties = {
+    for key, assignment in module.interfaces.role_assignments_azapi : key => merge(
+      assignment.body.properties,
+      {
+        principalId      = lower(assignment.body.properties.principalId)
+        roleDefinitionId = lower(assignment.body.properties.roleDefinitionId)
+      },
+      assignment.body.properties.delegatedManagedIdentityResourceId == null ? {} : {
+        delegatedManagedIdentityResourceId = lower(assignment.body.properties.delegatedManagedIdentityResourceId)
+      },
+      var.role_assignments[key].skip_service_principal_aad_check && var.role_assignments[key].principal_type == null ? {
+        principalType = "ServicePrincipal"
+      } : {},
+    )
+  }
+  role_assignment_properties_public_ip = {
+    for key, assignment in module.interfaces_public_ip.role_assignments_azapi : key => merge(
+      assignment.body.properties,
+      {
+        principalId      = lower(assignment.body.properties.principalId)
+        roleDefinitionId = lower(assignment.body.properties.roleDefinitionId)
+      },
+      assignment.body.properties.delegatedManagedIdentityResourceId == null ? {} : {
+        delegatedManagedIdentityResourceId = lower(assignment.body.properties.delegatedManagedIdentityResourceId)
+      },
+      var.role_assignments[key].skip_service_principal_aad_check && var.role_assignments[key].principal_type == null ? {
+        principalType = "ServicePrincipal"
+      } : {},
+    )
+  }
 }
 
 locals {

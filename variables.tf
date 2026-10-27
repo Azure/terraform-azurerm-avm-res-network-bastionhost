@@ -18,8 +18,8 @@ variable "parent_id" {
     # `parse_resource_id`, never a hand-rolled regex. The literal keeps the ID pinned to
     # resource-group scope, which this module depends on in three places: it is forwarded
     # verbatim as `parent_id` to `module.public_ip_address`, whose own TFNFR38 validation
-    # would reject anything else; `local.parent_resource_group.subscription_id` feeds
-    # `local.role_assignment_definition_scope` and so the role-definition lookup; and
+    # would reject anything else; `local.role_assignment_definition_scope` is this ID, so
+    # role names resolve at the resource group; and
     # `azapi_resource.bastion.parent_id` must be the Bastion host's real ARM parent.
     #
     # Measured at azapi 2.13.0: `parse_resource_id("Microsoft.Resources/resourceGroups", x)`
@@ -254,12 +254,19 @@ DESCRIPTION
 
 variable "retry" {
   type = object({
-    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned", "PrincipalNotFound"])
     interval_seconds     = optional(number, 10)
     max_interval_seconds = optional(number, 180)
   })
   default     = {}
-  description = "(Optional) Retry configuration for the resource operations, passed unchanged to the module-created public IP as well. The Bastion module defaults apply to both scopes; passing null delegates to the provider or child defaults."
+  description = <<DESCRIPTION
+(Optional) Retry configuration for the resource operations, passed unchanged to the module-created public IP as well. The Bastion module defaults apply to both scopes; passing null delegates to the provider or child defaults.
+
+The default `error_message_regex` list is:
+
+- `ReferencedResourceNotProvisioned` - a referenced resource is still provisioning.
+- `PrincipalNotFound` - the role assignment principal has not finished propagating through Entra ID. This covers the check that `skip_service_principal_aad_check` handled client-side under `hashicorp/azurerm`.
+DESCRIPTION
 }
 
 variable "scale_units" {

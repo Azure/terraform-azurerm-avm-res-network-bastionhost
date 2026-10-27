@@ -147,6 +147,13 @@ Two consequences for a consumer:
   forwards its own `var.parent_id`, so nothing in *your* configuration changes.
 
 
+### Role assignments
+
+- **`skip_service_principal_aad_check`** has no ARM request member. When it is `true` and `principal_type` is unset, the module sends `principalType = "ServicePrincipal"`, as AzureRM did. An explicit `principal_type` wins. `var.retry` retries `PrincipalNotFound` by default.
+- **Replacement.** ARM rejects an in-place change to the principal, the role definition or the delegated identity of a role assignment. Changing `principal_id`, `role_definition_id_or_name` (after it resolves to a role definition ID) or `delegated_managed_identity_resource_id` under an existing key replaces the assignment with a new derived GUID. Terraform deletes the old assignment first, so access is briefly missing. An assignment adopted from AzureRM keeps its GUID on an unchanged upgrade. A `name` that you set is reused by a replacement.
+- **Two scopes.** With a module-created public IP, each role assignment is written on the Bastion host and on the public IP. Role assignment names must be unique across scopes, so the public IP copy uses a different GUID, derived from the pinned name (or the principal and role) and the public IP.
+- **Role names** are resolved at the resource group of the Bastion host, so resource-group custom roles resolve.
+
 ## Local regression tests
 
 Run the provider-mocked Terraform suite with `avm test unit`, then run
@@ -157,6 +164,10 @@ plus the explicit binding for the write-only child ignore-path input.
 The override fixture uses fresh state because the pinned child's create writer
 retains its original configuration after creation. These checks do not prove
 live state moves, Azure drift behavior, or a staged Developer upgrade.
+
+`terraform test -test-directory=tests/offline` plans the role assignments with the real
+AzAPI provider, with no Azure authentication, to check that a changed principal, role or
+delegated identity replaces an assignment with a new GUID.
 
 For an owned-Public-IP live convergence check, save two consecutive refreshed
 plans after apply and export each with `terraform show -json`. Run

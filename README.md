@@ -148,6 +148,13 @@ Two consequences for a consumer:
   fully-qualified resource-group ID. This module absorbs that internally. It
   forwards its own `var.parent_id`, so nothing in *your* configuration changes.
 
+### Role assignments
+
+- **`skip_service_principal_aad_check`** has no ARM request member. When it is `true` and `principal_type` is unset, the module sends `principalType = "ServicePrincipal"`, as AzureRM did. An explicit `principal_type` wins. `var.retry` retries `PrincipalNotFound` by default.
+- **Replacement.** ARM rejects an in-place change to the principal, the role definition or the delegated identity of a role assignment. Changing `principal_id`, `role_definition_id_or_name` (after it resolves to a role definition ID) or `delegated_managed_identity_resource_id` under an existing key replaces the assignment with a new derived GUID. Terraform deletes the old assignment first, so access is briefly missing. An assignment adopted from AzureRM keeps its GUID on an unchanged upgrade. A `name` that you set is reused by a replacement.
+- **Two scopes.** With a module-created public IP, each role assignment is written on the Bastion host and on the public IP. Role assignment names must be unique across scopes, so the public IP copy uses a different GUID, derived from the pinned name (or the principal and role) and the public IP.
+- **Role names** are resolved at the resource group of the Bastion host, so resource-group custom roles resolve.
+
 ## Local regression tests
 
 Run the provider-mocked Terraform suite with `avm test unit`, then run
@@ -158,6 +165,10 @@ plus the explicit binding for the write-only child ignore-path input.
 The override fixture uses fresh state because the pinned child's create writer
 retains its original configuration after creation. These checks do not prove
 live state moves, Azure drift behavior, or a staged Developer upgrade.
+
+`terraform test -test-directory=tests/offline` plans the role assignments with the real
+AzAPI provider, with no Azure authentication, to check that a changed principal, role or
+delegated identity replaces an assignment with a new GUID.
 
 For an owned-Public-IP live convergence check, save two consecutive refreshed
 plans after apply and export each with `terraform show -json`. Run
@@ -456,11 +467,16 @@ Default: `{}`
 
 Description: (Optional) Retry configuration for the resource operations, passed unchanged to the module-created public IP as well. The Bastion module defaults apply to both scopes; passing null delegates to the provider or child defaults.
 
+The default `error_message_regex` list is:
+
+- `ReferencedResourceNotProvisioned` - a referenced resource is still provisioning.
+- `PrincipalNotFound` - the role assignment principal has not finished propagating through Entra ID. This covers the check that `skip_service_principal_aad_check` handled client-side under `hashicorp/azurerm`.
+
 Type:
 
 ```hcl
 object({
-    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned"])
+    error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned", "PrincipalNotFound"])
     interval_seconds     = optional(number, 10)
     max_interval_seconds = optional(number, 180)
   })
@@ -472,21 +488,17 @@ Default: `{}`
 
 Description: A map of role assignments to create on the Azure Bastion Host and, when this module creates one, on its public IP address. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
-- `principal_id` - The ID of the principal to assign the role to.
-- `name` - (Optional) The name of the role assignment, which must be a lowercase GUID. If not set, a random UUID is generated. Changing this forces the creation of a new resource.
+- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal. Names are resolved at the resource group of the Bastion host, so resource-group custom roles and inherited roles resolve. Changing the resolved role on an existing assignment replaces it with a new GUID.
+- `principal_id` - The ID of the principal to assign the role to. Changing it on an existing assignment replaces it with a new GUID.
+- `name` - (Optional) The name of the role assignment on the Bastion host, which must be a lowercase GUID. If not set, the module derives a GUID from the host, principal, role and delegated identity. An assignment adopted from AzureRM keeps its existing GUID on an unchanged upgrade. A name that you set is reused if the assignment is replaced. The copy on the module-created public IP never uses the same GUID, because role assignment names must be unique across scopes: it takes a different GUID derived from this name and the public IP.
 - `description` - (Optional) The description of the role assignment.
-- `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+- `skip_service_principal_aad_check` - (Optional) Preserves the AzureRM request behavior by sending `principalType = "ServicePrincipal"` when `principal_type` is unset. An explicit `principal_type` takes precedence. A `PrincipalNotFound` error from a principal that has not replicated yet is retried by `var.retry`. Defaults to false.
 - `condition` - (Optional) The condition which will be used to scope the role assignment.
 - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
-- `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+- `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. This field is only used in cross-tenant scenarios. Changing it on an existing assignment replaces it with a new GUID.
 - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
 
 > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
-
-> ⚠️ `skip_service_principal_aad_check` HAS NO EFFECT since this module moved to AzAPI. It mapped to an AzureRM-only client-side retry loop, not to anything on the ARM wire, and `Azure/avm-utl-interfaces/azure` 0.6.0 does not emit it. The attribute is retained so that existing configurations keep parsing; a role assignment against a freshly created service principal may now need a `depends_on` or a `time_sleep` instead. Removing it is a breaking change and is deferred to the next major.
-
-> ⚠️ `name` was ADDED by the AzAPI migration and exists for a specific reason: AzAPI addresses a role assignment by its GUID name, whereas AzureRM generated one server-side. It is the documented escape hatch for pinning an existing assignment's GUID so that an upgrade adopts rather than recreates it. The `moved` blocks in `main.interfaces.tf` already preserve every assignment this module itself created, so `name` is only needed when reconciling an assignment that arrived some other way.
 
 Type:
 

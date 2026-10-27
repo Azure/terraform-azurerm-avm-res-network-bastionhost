@@ -6,15 +6,12 @@
 # `azapi_resource`. That is the AVM target for interfaces and it removes the
 # last `azurerm_*` resource blocks from this module.
 #
-# 🔴 WHY THERE ARE TWO CALLS AND NOT ONE. The utility module generates a
-# `random_uuid` per role-assignment key (`main.role_assignments.tf`:
-# `resource "random_uuid" "role_assignment_name" { for_each = var.role_assignments }`).
-# A single call reused at both scopes would hand the SAME GUID to the Bastion
-# host's assignment and to the public IP's, and an ARM role-assignment name is
-# a GUID that must not be reused. Two calls give two independent UUID sets, one
-# per scope, and preserve the AzureRM-era arrangement where
-# `azurerm_role_assignment.this` and `azurerm_role_assignment.pip` were
-# genuinely separate assignments sharing only their map keys.
+# 🔴 WHY THERE ARE TWO CALLS AND NOT ONE. `avm-utl-interfaces` keeps one set of
+# role-assignment bodies per call. The Bastion host and the public IP are separate
+# scopes with their own assignments, so each scope has its own call, which also
+# preserves the AzureRM-era `azurerm_role_assignment.this` and `.pip` arrangement.
+# The resources below do not use the utility module's `random_uuid` names; they derive
+# their own so an explicit `name` is never reused across the two scopes.
 #
 # The state moves for every resource in this file are at the bottom.
 # =============================================================================
@@ -48,10 +45,9 @@ module "interfaces_public_ip" {
   enable_telemetry                 = false
   lock                             = local.lock_utl
   role_assignment_definition_scope = local.role_assignment_definition_scope
-  # Gated so that neither the per-key `random_uuid` resources nor the subscription-wide
-  # `data.azapi_resource_list.role_definitions` lookup are instantiated when this module
-  # is not creating a public IP. Mirrors the `for_each` guard AzureRM-era
-  # `azurerm_role_assignment.pip` carried.
+  # Gated so that neither the per-key `random_uuid` resources nor the role definition
+  # lookup are instantiated when this module is not creating a public IP. Mirrors the
+  # `for_each` guard AzureRM-era `azurerm_role_assignment.pip` carried.
   role_assignments = length(module.public_ip_address) > 0 ? var.role_assignments : {}
 }
 
@@ -136,12 +132,34 @@ resource "azapi_resource" "lock_public_ip" {
 resource "azapi_resource" "role_assignments" {
   for_each = module.interfaces.role_assignments_azapi
 
-  name                 = each.value.name
-  parent_id            = local.bastion_resource_id
-  type                 = var.resource_types.authorization_role_assignments
-  body                 = each.value.body
+  # A pinned name wins. Otherwise derive one from the host, principal, role and delegated
+  # identity, so a replacement caused by a changed principal or role gets a new GUID.
+  name = coalesce(
+    var.role_assignments[each.key].name,
+    uuidv5("url", join("|", [
+      lower(local.bastion_resource_id),
+      local.role_assignment_properties[each.key].principalId,
+      local.role_assignment_properties[each.key].roleDefinitionId,
+      lower(coalesce(local.role_assignment_properties[each.key].delegatedManagedIdentityResourceId, "-")),
+    ]))
+  )
+  parent_id = local.bastion_resource_id
+  type      = var.resource_types.authorization_role_assignments
+  body = {
+    properties = local.role_assignment_properties[each.key]
+  }
+  # Keeps the configured casing after refresh, so Azure's casing cannot trigger a replacement.
   ignore_body_changes  = local.ignore_body_changes.authorization_role_assignments
+  ignore_casing        = true
   ignore_null_property = true
+  # ARM rejects an in-place change of these members (`RoleAssignmentUpdateNotPermitted`), so a
+  # change replaces the assignment. A replacement takes the configured name, which is a new
+  # derived GUID unless the consumer pinned `name`.
+  replace_triggers_refs = [
+    "properties.principalId",
+    "properties.roleDefinitionId",
+    "properties.delegatedManagedIdentityResourceId",
+  ]
   # TFFR4. Empty: nothing reads a role assignment's response.
   response_export_values = []
   retry                  = var.retry
@@ -153,13 +171,11 @@ resource "azapi_resource" "role_assignments" {
     update = local.timeouts.authorization_role_assignments.update
   }
 
-  # 🔴 REQUIRED FOR THE STATE MOVE, not a style choice. An ARM role-assignment name
-  # is an immutable GUID: it is never renamed, only replaced. AzureRM generated that
-  # GUID server-side and never exposed it, so a moved-in state holds the REAL name
-  # while the configuration holds a freshly minted `random_uuid`. Without this the
-  # first plan after upgrading would replace every assignment -- an RBAC outage --
-  # rather than adopt it. See `Azure/avm-utl-interfaces` issue #137, and the `name`
-  # attribute on `var.role_assignments` for the manual escape hatch.
+  # A role assignment created by AzureRM has a server-assigned GUID as its name. The state
+  # move recovers it from the resource id, while the derived name above can never match it,
+  # and `name` carries `RequiresReplace` in AzAPI. Without this the first plan after upgrading
+  # would replace every assignment. `ignore_changes` is inert at create and replace time, so a
+  # new or replaced assignment takes the configured name.
   lifecycle {
     ignore_changes = [name]
   }
@@ -169,12 +185,30 @@ resource "azapi_resource" "role_assignments" {
 resource "azapi_resource" "role_assignments_public_ip" {
   for_each = module.interfaces_public_ip.role_assignments_azapi
 
-  name                   = each.value.name
-  parent_id              = module.public_ip_address[0].resource_id
-  type                   = var.resource_types.authorization_role_assignments
-  body                   = each.value.body
-  ignore_body_changes    = local.ignore_body_changes.authorization_role_assignments
-  ignore_null_property   = true
+  # Role assignment names must be unique across scopes, so the public IP copy never reuses the
+  # host's name. With a pinned name the copy is derived from that name and the public IP.
+  name = uuidv5("url", join("|", var.role_assignments[each.key].name == null ? [
+    lower(module.public_ip_address[0].resource_id),
+    local.role_assignment_properties_public_ip[each.key].principalId,
+    local.role_assignment_properties_public_ip[each.key].roleDefinitionId,
+    lower(coalesce(local.role_assignment_properties_public_ip[each.key].delegatedManagedIdentityResourceId, "-")),
+    ] : [
+    var.role_assignments[each.key].name,
+    lower(module.public_ip_address[0].resource_id),
+  ]))
+  parent_id = module.public_ip_address[0].resource_id
+  type      = var.resource_types.authorization_role_assignments
+  body = {
+    properties = local.role_assignment_properties_public_ip[each.key]
+  }
+  ignore_body_changes  = local.ignore_body_changes.authorization_role_assignments
+  ignore_casing        = true
+  ignore_null_property = true
+  replace_triggers_refs = [
+    "properties.principalId",
+    "properties.roleDefinitionId",
+    "properties.delegatedManagedIdentityResourceId",
+  ]
   response_export_values = []
   retry                  = var.retry
 
