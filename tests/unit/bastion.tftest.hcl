@@ -1,6 +1,4 @@
 mock_provider "azapi" {
-  alias = "unit"
-
   mock_resource "azapi_resource" {
     defaults = {
       id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.Network/bastionHosts/test-bastion"
@@ -16,32 +14,19 @@ mock_provider "azapi" {
       subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
     }
   }
-}
-
-mock_provider "azurerm" {
-  alias = "unit"
-
-  mock_resource "azurerm_public_ip" {
+  mock_data "azapi_resource" {
     defaults = {
-      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.Network/publicIPAddresses/test-pip"
-    }
-  }
-
-  mock_data "azurerm_public_ip" {
-    defaults = {
-      id    = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.Network/publicIPAddresses/existing-pip"
-      zones = ["1", "2", "3"]
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.Network/publicIPAddresses/existing-pip"
+      output = {
+        zones = ["1", "2", "3"]
+      }
     }
   }
 }
 
-mock_provider "modtm" {
-  alias = "unit"
-}
+mock_provider "modtm" {}
 
-mock_provider "random" {
-  alias = "unit"
-}
+mock_provider "random" {}
 
 variables {
   enable_telemetry = false
@@ -55,13 +40,6 @@ variables {
 
 run "basic_creates_public_ip" {
   command = apply
-
-  providers = {
-    azapi   = azapi.unit
-    azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
-  }
 
   assert {
     condition     = length(azapi_resource.bastion) == 1 && length(azapi_resource.bastion_developer) == 0 && length(module.public_ip_address) == 1
@@ -77,17 +55,15 @@ run "basic_creates_public_ip" {
     condition     = output.resource_id == azapi_resource.bastion[0].id && output.dns_name == "test-bastion.bastion.azure.com"
     error_message = "The resource ID and DNS output must identify the selected host."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "developer_uses_virtual_network" {
   command = apply
-
-  providers = {
-    azapi   = azapi.unit
-    azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
-  }
 
   variables {
     sku                = "Developer"
@@ -97,7 +73,7 @@ run "developer_uses_virtual_network" {
   }
 
   assert {
-    condition     = length(azapi_resource.bastion) == 0 && length(azapi_resource.bastion_developer) == 1 && length(module.public_ip_address) == 0 && length(data.azurerm_public_ip.this) == 0
+    condition     = length(azapi_resource.bastion) == 0 && length(azapi_resource.bastion_developer) == 1 && length(module.public_ip_address) == 0 && length(data.azapi_resource.public_ip) == 0
     error_message = "Developer Bastion must not create or look up a public IP."
   }
 
@@ -105,17 +81,15 @@ run "developer_uses_virtual_network" {
     condition     = azapi_resource.bastion_developer[0].body.properties.virtualNetwork.id == var.virtual_network_id && output.resource_id == azapi_resource.bastion_developer[0].id
     error_message = "Developer Bastion must use the supplied virtual network and expose its own ID."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "standard_uses_existing_public_ip" {
   command = apply
-
-  providers = {
-    azapi   = azapi.unit
-    azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
-  }
 
   variables {
     sku                    = "Standard"
@@ -134,7 +108,7 @@ run "standard_uses_existing_public_ip" {
   }
 
   assert {
-    condition     = length(module.public_ip_address) == 0 && length(data.azurerm_public_ip.this) == 1 && azapi_resource.bastion[0].body.properties.ipConfigurations[0].properties.publicIPAddress.id == var.ip_configuration.public_ip_address_id
+    condition     = length(module.public_ip_address) == 0 && length(data.azapi_resource.public_ip) == 1 && azapi_resource.bastion[0].body.properties.ipConfigurations[0].properties.publicIPAddress.id == var.ip_configuration.public_ip_address_id
     error_message = "The host must use the existing public IP without creating another."
   }
 
@@ -142,17 +116,15 @@ run "standard_uses_existing_public_ip" {
     condition     = azapi_resource.bastion[0].body.properties.disableCopyPaste && azapi_resource.bastion[0].body.properties.enableFileCopy && azapi_resource.bastion[0].body.properties.enableIpConnect && azapi_resource.bastion[0].body.properties.enableKerberos && azapi_resource.bastion[0].body.properties.enableShareableLink && azapi_resource.bastion[0].body.properties.enableTunneling && azapi_resource.bastion[0].body.properties.scaleUnits == 4
     error_message = "Standard Bastion feature settings must be applied to the host."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "premium_private_only" {
   command = apply
-
-  providers = {
-    azapi   = azapi.unit
-    azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
-  }
 
   variables {
     sku                       = "Premium"
@@ -165,7 +137,7 @@ run "premium_private_only" {
   }
 
   assert {
-    condition     = length(module.public_ip_address) == 0 && length(data.azurerm_public_ip.this) == 0 && azapi_resource.bastion[0].body.properties.ipConfigurations[0].properties.publicIPAddress == null
+    condition     = length(module.public_ip_address) == 0 && length(data.azapi_resource.public_ip) == 0 && azapi_resource.bastion[0].body.properties.ipConfigurations[0].properties.publicIPAddress == null
     error_message = "Private-only Bastion must not create, read, or attach a public IP."
   }
 
@@ -173,17 +145,15 @@ run "premium_private_only" {
     condition     = azapi_resource.bastion[0].body.properties.enablePrivateOnlyBastion && azapi_resource.bastion[0].body.properties.enableSessionRecording
     error_message = "Private-only and session recording settings must be applied."
   }
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "rejects_public_ip_zone_mismatch" {
   command = plan
-
-  providers = {
-    azapi   = azapi.unit
-    azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
-  }
 
   variables {
     zones = ["1"]
@@ -195,17 +165,15 @@ run "rejects_public_ip_zone_mismatch" {
   }
 
   expect_failures = [azapi_resource.bastion]
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
 
 run "rejects_incompatible_session_recording" {
   command = plan
-
-  providers = {
-    azapi   = azapi.unit
-    azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
-  }
 
   variables {
     sku                       = "Premium"
@@ -214,4 +182,9 @@ run "rejects_incompatible_session_recording" {
   }
 
   expect_failures = [var.tunneling_enabled]
+  providers = {
+    azapi  = azapi
+    modtm  = modtm
+    random = random
+  }
 }
