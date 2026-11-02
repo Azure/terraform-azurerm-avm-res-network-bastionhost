@@ -47,7 +47,7 @@ resource "random_integer" "region_index" {
 
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -57,7 +57,7 @@ resource "azurerm_resource_group" "this" {
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "= 0.15.0"
+  version = "0.22.3"
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
