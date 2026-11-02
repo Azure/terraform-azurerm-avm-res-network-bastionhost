@@ -60,7 +60,7 @@ resource "random_integer" "region" {
 
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -70,7 +70,7 @@ resource "azurerm_resource_group" "this" {
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "= 0.15.0"
+  version = "0.22.3"
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
@@ -179,13 +179,13 @@ Version:
 
 Source: Azure/avm-utl-naming/azure
 
-Version: 0.2.0
+Version: 0.3.0
 
 ### <a name="module_virtualnetwork"></a> [virtualnetwork](#module\_virtualnetwork)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: = 0.15.0
+Version: 0.22.3
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
