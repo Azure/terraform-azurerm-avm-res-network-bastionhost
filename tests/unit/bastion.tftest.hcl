@@ -24,8 +24,6 @@ mock_provider "azapi" {
   }
 }
 
-mock_provider "modtm" {}
-
 mock_provider "random" {}
 
 variables {
@@ -56,8 +54,8 @@ run "basic_creates_public_ip" {
     error_message = "The resource ID and DNS output must identify the selected host."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -82,8 +80,8 @@ run "developer_uses_virtual_network" {
     error_message = "Developer Bastion must use the supplied virtual network and expose its own ID."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -117,8 +115,8 @@ run "standard_uses_existing_public_ip" {
     error_message = "Standard Bastion feature settings must be applied to the host."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -146,8 +144,8 @@ run "premium_private_only" {
     error_message = "Private-only and session recording settings must be applied."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -166,8 +164,8 @@ run "rejects_public_ip_zone_mismatch" {
 
   expect_failures = [azapi_resource.bastion]
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -183,8 +181,8 @@ run "rejects_incompatible_session_recording" {
 
   expect_failures = [var.tunneling_enabled]
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }

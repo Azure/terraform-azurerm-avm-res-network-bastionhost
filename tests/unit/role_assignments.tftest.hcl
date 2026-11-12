@@ -16,8 +16,6 @@ mock_provider "azapi" {
   }
 }
 
-mock_provider "modtm" {}
-
 mock_provider "random" {}
 
 override_resource {
@@ -94,8 +92,8 @@ run "resolves_role_names_through_the_lookup" {
     error_message = "The public IP assignment must send the same resolved role definition id as the host assignment."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -153,8 +151,8 @@ run "sends_service_principal_type_when_skip_check_is_true" {
     error_message = "principalType must stay unset on the public IP assignment when neither the flag nor principal_type is set."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -200,8 +198,8 @@ run "derives_distinct_lowercase_names" {
     error_message = "Public IP assignments with different principals must get different derived names."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -242,8 +240,8 @@ run "pinned_name_is_kept_on_the_host_and_distinct_on_the_public_ip" {
     error_message = "The derived public IP name must be a lowercase UUIDv5."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -261,8 +259,8 @@ run "retries_principal_not_found_on_role_assignments_by_default" {
     error_message = "The default retry must cover PrincipalNotFound on the public IP role assignment."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -287,8 +285,8 @@ run "forwards_custom_retry_to_role_assignments" {
     error_message = "A consumer retry override must reach the public IP role assignment."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }

@@ -194,8 +194,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
-
 ## Resources
 
 The following resources are used by this module:
@@ -663,9 +661,9 @@ Version: 0.9.0
 
 ### <a name="module_public_ip_address"></a> [public\_ip\_address](#module\_public\_ip\_address)
 
-Source: git::https://github.com/Git-PrinceNagar/terraform-azurerm-avm-res-network-publicipaddress.git
+Source: Azure/avm-res-network-publicipaddress/azurerm
 
-Version: 38014e6831db544cad1105e33b9f4bfebcb36dab
+Version: 0.3.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

@@ -24,8 +24,6 @@ mock_provider "azapi" {
   }
 }
 
-mock_provider "modtm" {}
-
 mock_provider "random" {}
 
 variables {
@@ -58,8 +56,8 @@ run "created_ip_defaults" {
     error_message = "Empty parent ignore paths must still collapse to null."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -115,8 +113,8 @@ run "created_ip_overrides" {
     error_message = "The Standard host must use the module-created public IP."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -148,8 +146,8 @@ run "created_ip_null_controls" {
     error_message = "Null timeouts must retain the Bastion per-resource fallback."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -185,8 +183,8 @@ run "supplied_ip_read_type" {
     error_message = "The host must use the supplied public IP."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -212,8 +210,8 @@ run "premium_private_only" {
     error_message = "Private-only Premium must not attach a public IP."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }
@@ -241,8 +239,8 @@ run "developer_without_ip_configuration" {
     error_message = "Developer must not send an IP configuration."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }

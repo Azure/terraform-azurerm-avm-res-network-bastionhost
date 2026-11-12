@@ -11,8 +11,6 @@ mock_provider "azapi" {
   }
 }
 
-mock_provider "modtm" {}
-
 mock_provider "random" {}
 
 variables {
@@ -57,8 +55,8 @@ run "apply_child_controls" {
     error_message = "The propagation fixture must exercise the owned public IP child."
   }
   providers = {
-    azapi  = azapi
-    modtm  = modtm
+    azapi = azapi
+
     random = random
   }
 }

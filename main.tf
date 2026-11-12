@@ -114,14 +114,12 @@ moved {
   to   = azapi_resource.bastion[0]
 }
 
-# The public IP module is a pre-release candidate pinned to a commit. Before release this
-# reverts to `source = "Azure/avm-res-network-publicipaddress/azurerm"` with the released
-# version. The module's own `moved` blocks handle its AzureRM to AzAPI state, so the module
+# The public IP module's own `moved` blocks handle its AzureRM to AzAPI state, so the module
 # address does not change.
 module "public_ip_address" {
-  # tflint-ignore: avm_terraform_module_source_required // pre-release candidate pinned to an immutable commit; reverts to the registry source on release
-  source = "git::https://github.com/Git-PrinceNagar/terraform-azurerm-avm-res-network-publicipaddress.git?ref=38014e6831db544cad1105e33b9f4bfebcb36dab"
-  count  = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == true ? 1 : 0) : var.sku == "Developer" ? 0 : 1
+  source  = "Azure/avm-res-network-publicipaddress/azurerm"
+  version = "0.3.0"
+  count   = var.ip_configuration != null ? (var.ip_configuration.create_public_ip == true ? 1 : 0) : var.sku == "Developer" ? 0 : 1
 
   location            = var.location
   name                = coalesce(var.ip_configuration.public_ip_address_name, "pip-${var.name}")
