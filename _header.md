@@ -22,7 +22,7 @@ module "azure_bastion" {
 
   enable_telemetry    = true
   name                = module.naming.bastion_host.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+  parent_id           = azurerm_resource_group.this.id
   location            = azurerm_resource_group.this.location
   copy_paste_enabled  = true
   file_copy_enabled   = false
