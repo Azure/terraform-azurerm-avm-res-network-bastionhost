@@ -24,7 +24,7 @@ module "azure_bastion" {
 
   enable_telemetry    = true
   name                = module.naming.bastion_host.name_unique
-  resource_group_name = azurerm_resource_group.this.name
+  parent_id           = azurerm_resource_group.this.id
   location            = azurerm_resource_group.this.location
   copy_paste_enabled  = true
   file_copy_enabled   = false
@@ -60,8 +60,6 @@ The following requirements are needed by this module:
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
-
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
 ## Resources
 
@@ -378,7 +376,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-publicipaddress/azurerm
 
-Version: 0.2.0
+Version: 0.3.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

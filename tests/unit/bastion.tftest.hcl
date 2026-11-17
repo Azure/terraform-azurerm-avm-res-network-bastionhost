@@ -6,7 +6,8 @@ mock_provider "azapi" {
       id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.Network/bastionHosts/test-bastion"
       output = {
         properties = {
-          dnsName = "test-bastion.bastion.azure.com"
+          dnsName   = "test-bastion.bastion.azure.com"
+          ipAddress = "203.0.113.10"
         }
       }
     }
@@ -35,14 +36,6 @@ mock_provider "azurerm" {
   }
 }
 
-mock_provider "modtm" {
-  alias = "unit"
-}
-
-mock_provider "random" {
-  alias = "unit"
-}
-
 variables {
   enable_telemetry = false
   location         = "eastus"
@@ -59,8 +52,6 @@ run "basic_creates_public_ip" {
   providers = {
     azapi   = azapi.unit
     azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
   }
 
   assert {
@@ -85,8 +76,6 @@ run "developer_uses_virtual_network" {
   providers = {
     azapi   = azapi.unit
     azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
   }
 
   variables {
@@ -113,8 +102,6 @@ run "standard_uses_existing_public_ip" {
   providers = {
     azapi   = azapi.unit
     azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
   }
 
   variables {
@@ -150,8 +137,6 @@ run "premium_private_only" {
   providers = {
     azapi   = azapi.unit
     azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
   }
 
   variables {
@@ -181,8 +166,6 @@ run "rejects_public_ip_zone_mismatch" {
   providers = {
     azapi   = azapi.unit
     azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
   }
 
   variables {
@@ -203,8 +186,6 @@ run "rejects_incompatible_session_recording" {
   providers = {
     azapi   = azapi.unit
     azurerm = azurerm.unit
-    modtm   = modtm.unit
-    random  = random.unit
   }
 
   variables {

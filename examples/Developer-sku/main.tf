@@ -10,11 +10,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.10"
     }
-    # tflint-ignore: terraform_unused_required_providers
-    modtm = {
-      source  = "registry.terraform.io/azure/modtm"
-      version = "~> 0.3"
-    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
@@ -33,8 +28,11 @@ provider "azapi" {
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "= 0.8.2"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.13.2"
+
+  location         = var.location
+  enable_telemetry = var.enable_telemetry
 }
 
 # This allows us to randomize the region for the resource group.
@@ -47,7 +45,7 @@ resource "random_integer" "region_index" {
 
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -57,7 +55,7 @@ resource "azurerm_resource_group" "this" {
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "= 0.15.0"
+  version = "0.23.0"
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id

@@ -17,11 +17,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.10"
     }
-    # tflint-ignore: terraform_unused_required_providers
-    modtm = {
-      source  = "registry.terraform.io/azure/modtm"
-      version = "~> 0.3"
-    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
@@ -60,7 +55,7 @@ resource "random_integer" "region" {
 
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 resource "azurerm_resource_group" "this" {
@@ -70,7 +65,7 @@ resource "azurerm_resource_group" "this" {
 
 module "virtualnetwork" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "= 0.15.0"
+  version = "0.23.0"
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
@@ -135,8 +130,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.10)
 
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
-
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
 ## Resources
@@ -192,13 +185,13 @@ Version:
 
 Source: Azure/avm-utl-naming/azure
 
-Version: 0.2.0
+Version: 0.3.0
 
 ### <a name="module_virtualnetwork"></a> [virtualnetwork](#module\_virtualnetwork)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: = 0.15.0
+Version: 0.23.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
