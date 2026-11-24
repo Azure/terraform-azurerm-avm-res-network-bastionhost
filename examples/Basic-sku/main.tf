@@ -6,11 +6,6 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.12"
     }
-    # tflint-ignore: terraform_unused_required_providers
-    modtm = {
-      source  = "registry.terraform.io/azure/modtm"
-      version = "~> 0.3"
-    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
@@ -46,7 +41,7 @@ resource "random_integer" "region" {
 
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 # Supplies the subscription ID for the resource group below.

@@ -4,7 +4,8 @@ mock_provider "azapi" {
       id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test/providers/Microsoft.Network/bastionHosts/test-bastion"
       output = {
         properties = {
-          dnsName = "test-bastion.bastion.azure.com"
+          dnsName   = "test-bastion.bastion.azure.com"
+          ipAddress = "203.0.113.10"
         }
       }
     }
