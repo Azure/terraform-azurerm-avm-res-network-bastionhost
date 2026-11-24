@@ -12,9 +12,9 @@ module "interfaces" {
   diagnostic_settings = var.diagnostic_settings
   enable_telemetry    = var.enable_telemetry
   # `local.lock_utl` drops `notes`, which the utility module's `lock` type does not have.
-  lock                             = local.lock_utl
-  role_assignment_definition_scope = local.role_assignment_definition_scope
-  role_assignments                 = var.role_assignments
+  lock                                      = local.lock_utl
+  role_assignment_definition_lookup_enabled = false
+  role_assignments                          = local.resolved_role_assignments
 }
 
 module "interfaces_public_ip" {
@@ -25,11 +25,21 @@ module "interfaces_public_ip" {
   # AzureRM only had a lock and role assignments on the public IP, so there are no diagnostic settings.
   diagnostic_settings = {}
   # False so one Bastion host does not send two telemetry records. The call above carries the setting.
-  enable_telemetry                 = false
-  lock                             = local.lock_utl
-  role_assignment_definition_scope = local.role_assignment_definition_scope
-  # Empty when no public IP is created, so no lookup or role assignments are instantiated.
-  role_assignments = length(module.public_ip_address) > 0 ? var.role_assignments : {}
+  enable_telemetry                          = false
+  lock                                      = local.lock_utl
+  role_assignment_definition_lookup_enabled = false
+  # Empty when no public IP is created, so no role assignments are instantiated.
+  role_assignments = length(module.public_ip_address) > 0 ? local.resolved_role_assignments : {}
+}
+
+data "azapi_resource_list" "role_definitions" {
+  count = length(var.role_assignments) > 0 ? 1 : 0
+
+  parent_id = var.parent_id
+  type      = "Microsoft.Authorization/roleDefinitions@2022-04-01"
+  response_export_values = {
+    results = "value[].{id: id, role_name: properties.roleName}"
+  }
 }
 
 # Management lock on the Azure Bastion Host.
@@ -122,6 +132,11 @@ resource "azapi_resource" "role_assignments" {
   ignore_null_property = true
   # ARM rejects an in-place change of these members, so a change replaces the assignment
   # with the configured name: a new derived GUID unless `name` is pinned.
+  replace_triggers_external_values = {
+    principal_id                           = lower(var.role_assignments[each.key].principal_id)
+    role_definition_id_or_name             = lower(var.role_assignments[each.key].role_definition_id_or_name)
+    delegated_managed_identity_resource_id = var.role_assignments[each.key].delegated_managed_identity_resource_id == null ? null : lower(var.role_assignments[each.key].delegated_managed_identity_resource_id)
+  }
   replace_triggers_refs = [
     "properties.principalId",
     "properties.roleDefinitionId",
@@ -142,6 +157,11 @@ resource "azapi_resource" "role_assignments" {
   # It does not apply at create or replace, which take the configured name.
   lifecycle {
     ignore_changes = [name]
+
+    precondition {
+      condition     = strcontains(lower(local.resolved_role_assignments[each.key].role_definition_id_or_name), "/providers/microsoft.authorization/roledefinitions/")
+      error_message = "The role definition of role assignment `${each.key}` could not be resolved at the resource group. Supply an assignable role name or a role definition resource ID."
+    }
   }
 }
 
@@ -168,6 +188,11 @@ resource "azapi_resource" "role_assignments_public_ip" {
   ignore_body_changes  = local.ignore_body_changes.authorization_role_assignments
   ignore_casing        = true
   ignore_null_property = true
+  replace_triggers_external_values = {
+    principal_id                           = lower(var.role_assignments[each.key].principal_id)
+    role_definition_id_or_name             = lower(var.role_assignments[each.key].role_definition_id_or_name)
+    delegated_managed_identity_resource_id = var.role_assignments[each.key].delegated_managed_identity_resource_id == null ? null : lower(var.role_assignments[each.key].delegated_managed_identity_resource_id)
+  }
   replace_triggers_refs = [
     "properties.principalId",
     "properties.roleDefinitionId",
@@ -185,6 +210,11 @@ resource "azapi_resource" "role_assignments_public_ip" {
 
   lifecycle {
     ignore_changes = [name]
+
+    precondition {
+      condition     = strcontains(lower(local.resolved_role_assignments[each.key].role_definition_id_or_name), "/providers/microsoft.authorization/roledefinitions/")
+      error_message = "The role definition of role assignment `${each.key}` could not be resolved at the resource group. Supply an assignable role name or a role definition resource ID."
+    }
   }
 }
 

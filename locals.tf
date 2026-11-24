@@ -1,6 +1,15 @@
 locals {
-  # Role names resolve at the resource group of the Bastion host and its owned public IP.
-  role_assignment_definition_scope = var.parent_id
+  role_definition_ids_by_name = length(data.azapi_resource_list.role_definitions) == 0 ? {} : {
+    for role in data.azapi_resource_list.role_definitions[0].output.results : lower(role.role_name) => role.id...
+  }
+  resolved_role_assignments = {
+    for key, assignment in var.role_assignments : key => merge(assignment, {
+      role_definition_id_or_name = strcontains(lower(assignment.role_definition_id_or_name), "/providers/microsoft.authorization/roledefinitions/") ? assignment.role_definition_id_or_name : try(
+        local.role_definition_ids_by_name[lower(assignment.role_definition_id_or_name)][0],
+        assignment.role_definition_id_or_name
+      )
+    })
+  }
 
   # Role assignment request bodies, one set per scope. The ids are lowercased so a casing-only
   # change does not replace an assignment. AzureRM sent `principalType = "ServicePrincipal"`

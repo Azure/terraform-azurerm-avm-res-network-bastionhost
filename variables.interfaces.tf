@@ -115,7 +115,7 @@ variable "role_assignments" {
   description = <<DESCRIPTION
 A map of role assignments to create on the Azure Bastion Host and, when this module creates one, on its public IP address. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal. Names are resolved at the resource group of the Bastion host, so resource-group custom roles and inherited roles resolve. Changing the resolved role on an existing assignment replaces it with a new GUID.
+- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal. Names are matched case-insensitively at the resource group of the Bastion host, so resource-group custom roles and inherited roles resolve, and the plan fails when a name does not resolve. Changing this value on an existing assignment replaces it with a new GUID, including writing the same role as an ID instead of its name.
 - `principal_id` - The ID of the principal to assign the role to. Changing it on an existing assignment replaces it with a new GUID.
 - `name` - (Optional) The name of the role assignment on the Bastion host, which must be a lowercase GUID. If not set, the module derives a GUID from the host, principal, role and delegated identity. An assignment adopted from AzureRM keeps its existing GUID on an unchanged upgrade. A name that you set is reused if the assignment is replaced. The copy on the module-created public IP never uses the same GUID, because role assignment names must be unique across scopes: it takes a different GUID derived from this name and the public IP.
 - `description` - (Optional) The description of the role assignment.

@@ -155,9 +155,9 @@ Two consequences for a consumer:
 ### Role assignments
 
 - **`skip_service_principal_aad_check`** has no ARM request member. When it is `true` and `principal_type` is unset, the module sends `principalType = "ServicePrincipal"`, as AzureRM did. An explicit `principal_type` wins. `var.retry` retries `PrincipalNotFound` by default.
-- **Replacement.** ARM rejects an in-place change to the principal, the role definition or the delegated identity of a role assignment. Changing `principal_id`, `role_definition_id_or_name` (after it resolves to a role definition ID) or `delegated_managed_identity_resource_id` under an existing key replaces the assignment with a new derived GUID. Terraform deletes the old assignment first, so access is briefly missing. An assignment adopted from AzureRM keeps its GUID on an unchanged upgrade. A `name` that you set is reused by a replacement.
+- **Replacement.** ARM rejects an in-place change to the principal, the role definition or the delegated identity of a role assignment. Changing `principal_id`, `role_definition_id_or_name` or `delegated_managed_identity_resource_id` under an existing key replaces the assignment with a new derived GUID, and the replacement is decided at plan time even when one of these values is only known after apply. A value that is only known after apply therefore replaces the assignment, even if it ends up unchanged. Writing the same role as an ID instead of its name, or the reverse, counts as a change. Terraform deletes the old assignment first, so access is briefly missing. An assignment adopted from AzureRM keeps its GUID on an unchanged upgrade. A `name` that you set is reused by a replacement.
 - **Two scopes.** With a module-created public IP, each role assignment is written on the Bastion host and on the public IP. Role assignment names must be unique across scopes, so the public IP copy uses a different GUID, derived from the pinned name (or the principal and role) and the public IP.
-- **Role names** are resolved at the resource group of the Bastion host, so resource-group custom roles resolve.
+- **Role names** are matched case-insensitively at the resource group of the Bastion host, so resource-group custom roles resolve and a name AzureRM accepted, such as `monitoring reader`, still resolves. A name that does not resolve fails the plan.
 
 ## Local regression tests
 
@@ -209,6 +209,7 @@ The following resources are used by this module:
 - [terraform_data.telemetry](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azapi_resource.public_ip](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource_list.role_definitions](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -487,7 +488,7 @@ Default: `{}`
 
 Description: A map of role assignments to create on the Azure Bastion Host and, when this module creates one, on its public IP address. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal. Names are resolved at the resource group of the Bastion host, so resource-group custom roles and inherited roles resolve. Changing the resolved role on an existing assignment replaces it with a new GUID.
+- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal. Names are matched case-insensitively at the resource group of the Bastion host, so resource-group custom roles and inherited roles resolve, and the plan fails when a name does not resolve. Changing this value on an existing assignment replaces it with a new GUID, including writing the same role as an ID instead of its name.
 - `principal_id` - The ID of the principal to assign the role to. Changing it on an existing assignment replaces it with a new GUID.
 - `name` - (Optional) The name of the role assignment on the Bastion host, which must be a lowercase GUID. If not set, the module derives a GUID from the host, principal, role and delegated identity. An assignment adopted from AzureRM keeps its existing GUID on an unchanged upgrade. A name that you set is reused if the assignment is replaced. The copy on the module-created public IP never uses the same GUID, because role assignment names must be unique across scopes: it takes a different GUID derived from this name and the public IP.
 - `description` - (Optional) The description of the role assignment.

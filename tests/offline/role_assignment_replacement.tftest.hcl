@@ -55,19 +55,7 @@ override_data {
 }
 
 override_data {
-  target = module.interfaces.data.azapi_resource_list.role_definitions[0]
-  values = {
-    output = {
-      results = [{
-        id        = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
-        role_name = "Reader"
-      }]
-    }
-  }
-}
-
-override_data {
-  target = module.interfaces_public_ip.data.azapi_resource_list.role_definitions[0]
+  target = data.azapi_resource_list.role_definitions[0]
   values = {
     output = {
       results = [{
@@ -90,7 +78,7 @@ variables {
     reader = {
       name                       = "11111111-1111-4111-8111-111111111111"
       principal_id               = "22222222-2222-4222-8222-222222222222"
-      role_definition_id_or_name = "Reader"
+      role_definition_id_or_name = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
     }
   }
 }
@@ -131,7 +119,7 @@ run "real_provider_preserves_existing_guids" {
     role_assignments = {
       reader = {
         principal_id               = "22222222-2222-4222-8222-222222222222"
-        role_definition_id_or_name = "Reader"
+        role_definition_id_or_name = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
       }
     }
   }
@@ -158,7 +146,7 @@ run "real_provider_replaces_principal_edit_with_fresh_guids" {
     role_assignments = {
       reader = {
         principal_id               = "33333333-3333-4333-8333-333333333333"
-        role_definition_id_or_name = "Reader"
+        role_definition_id_or_name = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
       }
     }
   }
@@ -216,7 +204,7 @@ run "real_provider_replaces_delegated_identity_edit_with_fresh_guids" {
     role_assignments = {
       reader = {
         principal_id                           = "22222222-2222-4222-8222-222222222222"
-        role_definition_id_or_name             = "Reader"
+        role_definition_id_or_name             = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
         delegated_managed_identity_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.ManagedIdentity/userAssignedIdentities/delegated"
       }
     }
@@ -244,7 +232,7 @@ run "real_provider_replaces_immutable_and_mutable_edit_with_fresh_guids" {
     role_assignments = {
       reader = {
         principal_id               = "33333333-3333-4333-8333-333333333333"
-        role_definition_id_or_name = "Reader"
+        role_definition_id_or_name = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
         description                = "A mutable edit must not hide the immutable one."
       }
     }
@@ -272,7 +260,7 @@ run "real_provider_allows_description_edit" {
     role_assignments = {
       reader = {
         principal_id               = "22222222-2222-4222-8222-222222222222"
-        role_definition_id_or_name = "Reader"
+        role_definition_id_or_name = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
         description                = "Updated description"
       }
     }
@@ -300,7 +288,7 @@ run "real_provider_allows_condition_edit" {
     role_assignments = {
       reader = {
         principal_id               = "22222222-2222-4222-8222-222222222222"
-        role_definition_id_or_name = "Reader"
+        role_definition_id_or_name = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
         condition                  = "(!(ActionMatches{'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write'}))"
         condition_version          = "2.0"
       }
@@ -329,7 +317,7 @@ run "real_provider_keeps_guids_when_skip_check_adds_principal_type" {
     role_assignments = {
       reader = {
         principal_id                     = "22222222-2222-4222-8222-222222222222"
-        role_definition_id_or_name       = "Reader"
+        role_definition_id_or_name       = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
         skip_service_principal_aad_check = true
       }
     }
@@ -364,5 +352,28 @@ run "real_provider_accepts_equivalent_role_id_casing" {
   assert {
     condition     = azapi_resource.role_assignments["reader"].name == "11111111-1111-4111-8111-111111111111" && azapi_resource.role_assignments_public_ip["reader"].name == "9100b857-5bb8-50a9-b448-21d0532dec63"
     error_message = "A change in casing alone must not replace either assignment."
+  }
+}
+
+run "real_provider_replaces_when_a_role_id_becomes_its_name" {
+  command = plan
+  providers = {
+    azapi  = azapi.offline
+    random = random
+  }
+  plan_options {
+    refresh = false
+  }
+  variables {
+    role_assignments = {
+      reader = {
+        principal_id               = "22222222-2222-4222-8222-222222222222"
+        role_definition_id_or_name = "Reader"
+      }
+    }
+  }
+  assert {
+    condition     = azapi_resource.role_assignments["reader"].name != "11111111-1111-4111-8111-111111111111" && azapi_resource.role_assignments_public_ip["reader"].name != "9100b857-5bb8-50a9-b448-21d0532dec63"
+    error_message = "The replacement trigger keys on the role input, so writing the same role as a name instead of an ID replaces the assignment with a new GUID."
   }
 }

@@ -28,25 +28,7 @@ override_resource {
 # The lookup scope itself (the resource group) is set in `locals.tf` and is proven live,
 # because a mocked data source cannot show which scope it was asked for.
 override_data {
-  target = module.interfaces.data.azapi_resource_list.role_definitions[0]
-  values = {
-    output = {
-      results = [
-        {
-          id        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Authorization/roleDefinitions/00000000-0000-0000-0000-000000000007"
-          role_name = "RG Only Custom Role"
-        },
-        {
-          id        = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
-          role_name = "Reader"
-        },
-      ]
-    }
-  }
-}
-
-override_data {
-  target = module.interfaces_public_ip.data.azapi_resource_list.role_definitions[0]
+  target = data.azapi_resource_list.role_definitions[0]
   values = {
     output = {
       results = [
@@ -91,6 +73,57 @@ run "resolves_role_names_through_the_lookup" {
     condition     = azapi_resource.role_assignments_public_ip["custom"].body.properties.roleDefinitionId == azapi_resource.role_assignments["custom"].body.properties.roleDefinitionId
     error_message = "The public IP assignment must send the same resolved role definition id as the host assignment."
   }
+  providers = {
+    azapi = azapi
+
+    random = random
+  }
+}
+
+run "resolves_role_names_case_insensitively" {
+  command = apply
+
+  variables {
+    role_assignments = {
+      custom = {
+        role_definition_id_or_name = "rg only CUSTOM role"
+        principal_id               = "00000000-0000-0000-0000-000000000004"
+      }
+    }
+  }
+
+  assert {
+    condition     = endswith(azapi_resource.role_assignments["custom"].body.properties.roleDefinitionId, "/roledefinitions/00000000-0000-0000-0000-000000000007")
+    error_message = "A role name must resolve whatever its casing, as AzureRM did, on the host assignment."
+  }
+
+  assert {
+    condition     = endswith(azapi_resource.role_assignments_public_ip["custom"].body.properties.roleDefinitionId, "/roledefinitions/00000000-0000-0000-0000-000000000007")
+    error_message = "A role name must resolve whatever its casing on the public IP assignment too."
+  }
+  providers = {
+    azapi = azapi
+
+    random = random
+  }
+}
+
+run "fails_the_plan_when_a_role_name_does_not_resolve" {
+  command = plan
+
+  variables {
+    role_assignments = {
+      custom = {
+        role_definition_id_or_name = "No Such Role"
+        principal_id               = "00000000-0000-0000-0000-000000000004"
+      }
+    }
+  }
+
+  expect_failures = [
+    azapi_resource.role_assignments,
+    azapi_resource.role_assignments_public_ip,
+  ]
   providers = {
     azapi = azapi
 
