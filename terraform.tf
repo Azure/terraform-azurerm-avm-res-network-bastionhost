@@ -6,9 +6,8 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.12"
     }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.10"
-    }
   }
 }
+
+# This module and everything it calls are AzAPI-only; no `azurerm` provider is required.
+# The child modules declare the `modtm` and `random` providers they need.
